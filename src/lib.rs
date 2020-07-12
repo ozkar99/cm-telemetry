@@ -1,4 +1,4 @@
-mod net;
 pub mod dirt;
+mod net;
 
-pub use dirt::Dirt; // import main struct into root
+pub use dirt::DirtRally2; // import main struct into root

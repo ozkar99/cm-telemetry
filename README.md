@@ -1,12 +1,14 @@
 # cm-telemetry
 
-Implements the codemaster UDP telemetry protocol
+Implements the codemasters UDP telemetry protocol
 and provides an abstraction for interacting with it.
 
 ## Supported Games
 
-- F1 2020
-- Dirt Rally/Dirt Rally 2.0
+- Dirt Rally 2.0
+
+
+Tho supporting new games should be fairly straigth forward.
 
 ### Furter Reading
 
