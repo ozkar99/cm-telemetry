@@ -1,8 +1,10 @@
 [package]
 name = "cm-telemetry"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Oscar Moreno <oscarmg99@gmail.com>"]
-description = "Implementation of the codemaster telemetry UDP protocol for various games"
+repository = "https://github.com/ozkar99/cm-telemetry"
+readme = "README.md"
+description = "Implementation of the telemetry UDP protocol for codemaster's games"
 license = "MIT"
 license-file = "LICENSE"
 edition = "2018"
