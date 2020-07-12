@@ -8,7 +8,7 @@ and provides an abstraction for interacting with it.
 - Dirt Rally 2.0
 
 
-Tho supporting new games should be fairly straigth forward.
+Tho supporting new games should be fairly straight forward.
 
 ### Furter Reading
 
