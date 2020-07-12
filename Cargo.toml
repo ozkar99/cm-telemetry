@@ -2,6 +2,9 @@
 name = "cm-telemetry"
 version = "0.1.0"
 authors = ["Oscar Moreno <oscarmg99@gmail.com>"]
+description = "Implementation of the codemaster telemetry UDP protocol for various games"
+license = "MIT"
+license-file = "LICENSE"
 edition = "2018"
 
 [dependencies]
