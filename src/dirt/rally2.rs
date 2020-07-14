@@ -1,5 +1,4 @@
-use crate::net::Packet;
-use crate::Event;
+use crate::{Event, Packet};
 use std::error::Error;
 
 extern crate byteorder;

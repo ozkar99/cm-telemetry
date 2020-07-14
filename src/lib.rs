@@ -1,10 +1,12 @@
+pub mod dirt;
 mod net;
 
-pub mod dirt;
+// Packet is an alias for a vectory of bytes
+pub type Packet = Vec<u8>;
 
-// Event specifies a way to serialize itself from a net::Packet (slice of bytes).
+// Event specifies a way to serialize itself from a Packet
 pub trait Event {
-    fn from_packet(packet: &net::Packet) -> Result<Self, Box<dyn std::error::Error>>
+    fn from_packet(packet: &Packet) -> Result<Self, Box<dyn std::error::Error>>
     where
         Self: Sized;
 }

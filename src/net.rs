@@ -1,3 +1,4 @@
+use crate::Packet;
 use std::net::UdpSocket;
 
 const DEFAULT_ADDRESS: &str = "127.0.0.1:20777";
@@ -6,8 +7,6 @@ const MAX_PACKET_SIZE: usize = 2048;
 pub struct Server {
     srv: UdpSocket,
 }
-
-pub type Packet = Vec<u8>;
 
 impl Server {
     pub fn new() -> Result<Server, std::io::Error> {
