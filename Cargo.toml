@@ -1,6 +1,6 @@
 [package]
 name = "cm-telemetry"
-version = "0.2.1"
+version = "1.0.0"
 authors = ["Oscar Moreno <oscarmg99@gmail.com>"]
 repository = "https://github.com/ozkar99/cm-telemetry"
 readme = "README.md"

@@ -1,43 +1,29 @@
+use crate::net::Packet;
+use crate::Event;
 use std::error::Error;
-use crate::net::*;
 
 extern crate byteorder;
 use byteorder::{ByteOrder, LittleEndian};
 
-// Please note that DirtRally2 needs extradata="3"!
-pub struct DirtRally2 {
-    srv: Server,
-}
-
-impl DirtRally2 {
-    pub fn new() -> Result<DirtRally2, std::io::Error> {
-        match Server::new() {
-            Ok(srv) => Ok(DirtRally2 { srv}),
-            Err(e) => Err(e),
-        }
-    }
-
-    pub fn with_address(addr: &'static str) -> Result<DirtRally2, std::io::Error> {
-        match Server::with_addr(addr) {
-            Ok(srv) => Ok(DirtRally2 { srv }),
-            Err(e) => Err(e),
-        }
-    }
-
-    pub fn next_event(&self) -> Result<Event, Box<dyn Error>> {
-        let packet = self.srv.recv()?;
-        if packet.len() < 255 {
-            return Err(Box::from("Packet size is less than 256 bytes, please set extradata=3 on hardware_settings_config.xml"));
-        }
-        Event::from_packet(packet)
-    }
-}
-
 #[derive(Debug)]
-pub struct Event {
+pub struct DirtRally2 {
     pub car: Car,
     pub session: Session,
     pub motion: Motion,
+}
+
+impl Event for DirtRally2 {
+    // see: https://docs.google.com/spreadsheets/d/1eA518KHFowYw7tSMa-NxIFYpiWe5JXgVVQ_IMs7BVW0/edit#gid=0 for details on the specification
+    fn from_packet(packet: &Packet) -> Result<DirtRally2, Box<dyn Error>> {
+        if packet.len() < 256 {
+            return Err(Box::from("Packet size is less than 256 bytes, please set extradata=3 on hardware_settings_config.xml"));
+        }
+        Ok(DirtRally2 {
+            car: Car::from_packet(&packet)?,
+            session: Session::from_packet(&packet)?,
+            motion: Motion::from_packet(&packet)?,
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -109,17 +95,6 @@ pub struct Lap {
 }
 
 type Coordinate = (f32, f32, f32); // x,y,z coordinates
-
-impl Event {
-    pub fn from_packet(packet: Packet) -> Result<Event, Box<dyn Error>> {
-        // see: https://docs.google.com/spreadsheets/d/1eA518KHFowYw7tSMa-NxIFYpiWe5JXgVVQ_IMs7BVW0/edit#gid=0
-        Ok(Event {
-            car: Car::from_packet(&packet)?,
-            session: Session::from_packet(&packet)?,
-            motion: Motion::from_packet(&packet)?,
-        })
-    }
-}
 
 impl Car {
     fn from_packet(packet: &Packet) -> Result<Car, Box<dyn Error>> {
