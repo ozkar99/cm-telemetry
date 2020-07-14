@@ -1,7 +1,6 @@
 use crate::Packet;
 use std::net::UdpSocket;
 
-const DEFAULT_ADDRESS: &str = "127.0.0.1:20777";
 const MAX_PACKET_SIZE: usize = 2048;
 
 pub struct Server {
@@ -9,14 +8,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new() -> Result<Server, std::io::Error> {
-        match UdpSocket::bind(DEFAULT_ADDRESS) {
-            Ok(udp_server) => Ok(Server { srv: udp_server }),
-            Err(e) => Err(e),
-        }
-    }
-
-    pub fn with_addr(addr: &'static str) -> Result<Server, std::io::Error> {
+    pub fn new(addr: &'static str) -> Result<Server, std::io::Error> {
         match UdpSocket::bind(addr) {
             Ok(udp_server) => Ok(Server { srv: udp_server }),
             Err(e) => Err(e),

@@ -2,7 +2,7 @@ use cm_telemetry::dirt::rally2::DirtRally2;
 use cm_telemetry::Server;
 
 fn main() {
-    let server = Server::<DirtRally2>::new().expect("failed to bind to address");
+    let server = Server::<DirtRally2>::new("127.0.0.1:20777").expect("failed to bind to address");
 
     loop {
         match server.next_event() {
