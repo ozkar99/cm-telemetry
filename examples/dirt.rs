@@ -1,7 +1,7 @@
 use cm_telemetry;
 
 fn main() {
-    let dirt = cm_telemetry::DirtRally2::new().expect("failed to bind to address");
+    let dirt = cm_telemetry::dirt::rally2::DirtRally2::new().expect("failed to bind to address");
 
     loop {
         match dirt.next_event() {

@@ -1,8 +1,37 @@
-use crate::net::Packet;
 use std::error::Error;
+use crate::net::*;
 
 extern crate byteorder;
 use byteorder::{ByteOrder, LittleEndian};
+
+// Please note that DirtRally2 needs extradata="3"!
+pub struct DirtRally2 {
+    srv: Server,
+}
+
+impl DirtRally2 {
+    pub fn new() -> Result<DirtRally2, std::io::Error> {
+        match Server::new() {
+            Ok(srv) => Ok(DirtRally2 { srv: srv }),
+            Err(e) => Err(e),
+        }
+    }
+
+    pub fn with_address(addr: &'static str) -> Result<DirtRally2, std::io::Error> {
+        match Server::with_addr(addr) {
+            Ok(srv) => Ok(DirtRally2 { srv: srv }),
+            Err(e) => Err(e),
+        }
+    }
+
+    pub fn next_event(&self) -> Result<Event, Box<dyn Error>> {
+        let packet = self.srv.recv()?;
+        if packet.len() < 255 {
+            return Err(Box::from("Packet size is less than 256 bytes, please set extradata=3 on hardware_settings_config.xml"));
+        }
+        Event::from_packet(packet)
+    }
+}
 
 #[derive(Debug)]
 pub struct Event {
@@ -84,17 +113,17 @@ type Coordinate = (f32, f32, f32); // x,y,z coordinates
 impl Event {
     pub fn from_packet(packet: Packet) -> Result<Event, Box<dyn Error>> {
         // see: https://docs.google.com/spreadsheets/d/1eA518KHFowYw7tSMa-NxIFYpiWe5JXgVVQ_IMs7BVW0/edit#gid=0
-        return Ok(Event {
+        Ok(Event {
             car: Car::from_packet(&packet)?,
             session: Session::from_packet(&packet)?,
             motion: Motion::from_packet(&packet)?,
-        });
+        })
     }
 }
 
 impl Car {
     fn from_packet(packet: &Packet) -> Result<Car, Box<dyn Error>> {
-        return Ok(Car {
+        Ok(Car {
             speed: LittleEndian::read_f32(&packet[28..32]),
             throttle: LittleEndian::read_f32(&packet[116..120]),
             steer: LittleEndian::read_f32(&packet[120..124]),
@@ -132,13 +161,13 @@ impl Car {
                     brake_temperature: LittleEndian::read_f32(&packet[216..220]),
                 },
             ),
-        });
+        })
     }
 }
 
 impl Session {
     fn from_packet(packet: &Packet) -> Result<Session, Box<dyn Error>> {
-        return Ok(Session {
+        Ok(Session {
             location: (
                 LittleEndian::read_f32(&packet[16..20]),
                 LittleEndian::read_f32(&packet[20..24]),
@@ -147,13 +176,13 @@ impl Session {
             position: LittleEndian::read_f32(&packet[156..160]),
             track: Track::from_packet(&packet)?,
             lap_info: Lap::from_packet(&packet)?,
-        });
+        })
     }
 }
 
 impl Motion {
     fn from_packet(packet: &Packet) -> Result<Motion, Box<dyn Error>> {
-        return Ok(Motion {
+        Ok(Motion {
             g_force_lateral: LittleEndian::read_f32(&packet[136..140]),
             g_force_longitudinal: LittleEndian::read_f32(&packet[140..144]),
             pitch_vector: (
@@ -171,29 +200,29 @@ impl Motion {
                 LittleEndian::read_f32(&packet[36..40]),
                 LittleEndian::read_f32(&packet[40..44]),
             ),
-        });
+        })
     }
 }
 
 impl Lap {
     fn from_packet(packet: &Packet) -> Result<Lap, Box<dyn Error>> {
-        return Ok(Lap {
+        Ok(Lap {
             current_lap_time: LittleEndian::read_f32(&packet[4..8]),
             current_lap_distance: LittleEndian::read_f32(&packet[8..12]),
             current_lap: LittleEndian::read_f32(&packet[144..148]),
             total_laps: LittleEndian::read_f32(&packet[240..244]),
             last_lap_time: LittleEndian::read_f32(&packet[248..252]),
-        });
+        })
     }
 }
 
 impl Track {
     fn from_packet(packet: &Packet) -> Result<Track, Box<dyn Error>> {
-        return Ok(Track {
+        Ok(Track {
             distance: LittleEndian::read_f32(&packet[12..16]),
             time: LittleEndian::read_f32(&packet[0..4]),
             length: LittleEndian::read_f32(&packet[244..248]),
-        });
+        })
     }
 }
 
@@ -243,6 +272,6 @@ impl Gear {
             return Ok(Gear::Ninth);
         }
 
-        return Err(Box::from("unknown gear"));
+        Err(Box::from("unknown gear"))
     }
 }

@@ -1,4 +1,1 @@
-mod dirt;
-pub mod event;
-
-pub use dirt::DirtRally2;
+pub mod rally2;
