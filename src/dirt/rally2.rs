@@ -12,14 +12,14 @@ pub struct DirtRally2 {
 impl DirtRally2 {
     pub fn new() -> Result<DirtRally2, std::io::Error> {
         match Server::new() {
-            Ok(srv) => Ok(DirtRally2 { srv: srv }),
+            Ok(srv) => Ok(DirtRally2 { srv}),
             Err(e) => Err(e),
         }
     }
 
     pub fn with_address(addr: &'static str) -> Result<DirtRally2, std::io::Error> {
         match Server::with_addr(addr) {
-            Ok(srv) => Ok(DirtRally2 { srv: srv }),
+            Ok(srv) => Ok(DirtRally2 { srv }),
             Err(e) => Err(e),
         }
     }
