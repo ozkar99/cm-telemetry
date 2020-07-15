@@ -17,9 +17,7 @@ impl Server {
 
     pub fn recv(&self) -> Result<Packet, std::io::Error> {
         let mut buf = [0; MAX_PACKET_SIZE];
-        match self.srv.recv_from(&mut buf) {
-            Ok((number, _)) => Ok(buf[..number].to_vec()),
-            Err(e) => Err(e),
-        }
+        let (number, _) = self.srv.recv_from(&mut buf)?;
+        Ok(buf[..number].to_vec())
     }
 }

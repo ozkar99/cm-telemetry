@@ -21,13 +21,11 @@ pub struct Server<T: Event> {
 impl<T: Event> Server<T> {
     /// new initializes a Server with the given address
     pub fn new(address: &'static str) -> Result<Server<T>, std::io::Error> {
-        match net::Server::new(address) {
-            Ok(srv) => Ok(Server {
-                srv,
-                phantom: std::marker::PhantomData,
-            }),
-            Err(e) => Err(e),
-        }
+        let srv = net::Server::new(address)?;
+        Ok(Server {
+            srv,
+            phantom: std::marker::PhantomData,
+        })
     }
 
     /// next_event will call recv on the inner UDP server (this blocks)
