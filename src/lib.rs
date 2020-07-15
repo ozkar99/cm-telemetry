@@ -1,7 +1,7 @@
 pub mod dirt;
 mod net;
 
-/// Packet is an alias for a vectory of bytes
+/// Packet is an alias for a vector of bytes
 pub type Packet = Vec<u8>;
 
 /// Event specifies a way to serialize itself from a Packet
@@ -11,7 +11,7 @@ pub trait Event {
         Self: Sized;
 }
 
-/// Server implements a generic server that can bind and recv
+/// Server implements a generic server that can bind and recv packets
 /// exposes the next_event method that returns an unpacked "Event"
 pub struct Server<T: Event> {
     srv: net::Server,
