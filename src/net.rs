@@ -1,4 +1,3 @@
-use crate::Packet;
 use std::net::UdpSocket;
 
 const MAX_PACKET_SIZE: usize = 2048;
@@ -15,7 +14,7 @@ impl Server {
         }
     }
 
-    pub fn recv(&self) -> Result<Packet, std::io::Error> {
+    pub fn recv(&self) -> Result<Vec<u8>, std::io::Error> {
         let mut buf = [0; MAX_PACKET_SIZE];
         let (number, _) = self.srv.recv_from(&mut buf)?;
         Ok(buf[..number].to_vec())

@@ -1,19 +1,19 @@
-use crate::{Event, Packet};
+use crate::{TelemetryEvent, TelemetryPacket};
 use std::error::Error;
 
 extern crate byteorder;
 use byteorder::{ByteOrder, LittleEndian};
 
-#[derive(Debug)]
+/// DirtRally2 implements the codemasters UDP telemetry protocol for "Dirt Rally 2.0"
+/// see: https://docs.google.com/spreadsheets/d/1eA518KHFowYw7tSMa-NxIFYpiWe5JXgVVQ_IMs7BVW0/edit#gid=0 for details on the specification
 pub struct DirtRally2 {
     pub car: Car,
     pub session: Session,
     pub motion: Motion,
 }
 
-impl Event for DirtRally2 {
-    // see: https://docs.google.com/spreadsheets/d/1eA518KHFowYw7tSMa-NxIFYpiWe5JXgVVQ_IMs7BVW0/edit#gid=0 for details on the specification
-    fn from_packet(packet: &Packet) -> Result<DirtRally2, Box<dyn Error>> {
+impl TelemetryEvent for DirtRally2 {
+    fn from_packet(packet: &TelemetryPacket) -> Result<DirtRally2, Box<dyn Error>> {
         if packet.len() < 256 {
             return Err(Box::from("Packet size is less than 256 bytes, please set extradata=3 on hardware_settings_config.xml"));
         }
@@ -25,7 +25,6 @@ impl Event for DirtRally2 {
     }
 }
 
-#[derive(Debug)]
 pub struct Session {
     pub position: f32,
     pub location: Coordinate,
@@ -33,7 +32,6 @@ pub struct Session {
     pub lap_info: Lap,
 }
 
-#[derive(Debug)]
 pub struct Car {
     pub speed: f32,
     pub gear: Gear,
@@ -60,7 +58,6 @@ pub enum Gear {
     Ninth,
 }
 
-#[derive(Debug)]
 pub struct Motion {
     pub velocity: Coordinate,
     pub roll_vector: Coordinate,
@@ -69,7 +66,6 @@ pub struct Motion {
     pub g_force_longitudinal: f32,
 }
 
-#[derive(Debug)]
 pub struct Wheel {
     pub suspension_position: f32,
     pub suspension_velocity: f32,
@@ -77,14 +73,12 @@ pub struct Wheel {
     pub brake_temperature: f32,
 }
 
-#[derive(Debug)]
 pub struct Track {
     pub time: f32,
     pub distance: f32,
     pub length: f32,
 }
 
-#[derive(Debug)]
 pub struct Lap {
     pub current_lap: f32,
     pub total_laps: f32,
@@ -96,7 +90,7 @@ pub struct Lap {
 type Coordinate = (f32, f32, f32); // x,y,z coordinates
 
 impl Car {
-    fn from_packet(packet: &Packet) -> Result<Car, Box<dyn Error>> {
+    fn from_packet(packet: &TelemetryPacket) -> Result<Car, Box<dyn Error>> {
         Ok(Car {
             speed: LittleEndian::read_f32(&packet[28..32]),
             throttle: LittleEndian::read_f32(&packet[116..120]),
@@ -140,7 +134,7 @@ impl Car {
 }
 
 impl Session {
-    fn from_packet(packet: &Packet) -> Result<Session, Box<dyn Error>> {
+    fn from_packet(packet: &TelemetryPacket) -> Result<Session, Box<dyn Error>> {
         Ok(Session {
             location: (
                 LittleEndian::read_f32(&packet[16..20]),
@@ -155,7 +149,7 @@ impl Session {
 }
 
 impl Motion {
-    fn from_packet(packet: &Packet) -> Result<Motion, Box<dyn Error>> {
+    fn from_packet(packet: &TelemetryPacket) -> Result<Motion, Box<dyn Error>> {
         Ok(Motion {
             g_force_lateral: LittleEndian::read_f32(&packet[136..140]),
             g_force_longitudinal: LittleEndian::read_f32(&packet[140..144]),
@@ -179,7 +173,7 @@ impl Motion {
 }
 
 impl Lap {
-    fn from_packet(packet: &Packet) -> Result<Lap, Box<dyn Error>> {
+    fn from_packet(packet: &TelemetryPacket) -> Result<Lap, Box<dyn Error>> {
         Ok(Lap {
             current_lap_time: LittleEndian::read_f32(&packet[4..8]),
             current_lap_distance: LittleEndian::read_f32(&packet[8..12]),
@@ -191,7 +185,7 @@ impl Lap {
 }
 
 impl Track {
-    fn from_packet(packet: &Packet) -> Result<Track, Box<dyn Error>> {
+    fn from_packet(packet: &TelemetryPacket) -> Result<Track, Box<dyn Error>> {
         Ok(Track {
             distance: LittleEndian::read_f32(&packet[12..16]),
             time: LittleEndian::read_f32(&packet[0..4]),

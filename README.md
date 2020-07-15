@@ -5,6 +5,7 @@ and provides an abstraction for interacting with it.
 
 ## Supported Games
 
+- F1 2020
 - Dirt Rally 2.0
 
 ### Using Externally Defined Games
