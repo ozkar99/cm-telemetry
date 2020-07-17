@@ -20,11 +20,34 @@ pub enum F1_2020 {
     LobbyInfo(Header),
 }
 
-pub struct Header {}
+pub struct Header {
+    packet_format: u16,
+    game_major_version: u8,
+    game_minor_version: u8,
+    packet_version: u8,
+    packet_id: u8,
+    session_uid: u64,
+    session_time: f32,
+    frame_identifier: u32,
+    player_car_index: u8,
+    secondary_player_car_index: u8,
+}
 
 impl TelemetryEvent for F1_2020 {
     fn from_packet(_packet: &TelemetryPacket) -> Result<F1_2020, Box<dyn Error>> {
         let header = Header {};
-        Ok(F1_2020::Motion(header))
+        match header.packet_id {
+            0 => Ok(F1_2020::Motion(header)),
+            1 => Ok(F1_2020::Session(header)),
+            2 => Ok(F1_2020::LapData(header)),
+            3 => Ok(F1_2020::Event(header)),
+            4 => Ok(F1_2020::Participants(header)),
+            5 => Ok(F1_2020::CarSetups(header)),
+            6 => Ok(F1_2020::CarTelemetry(header)),
+            7 => Ok(F1_2020::CarStatus(header)),
+            8 => Ok(F1_2020::FinalClassification(header)),
+            9 => OK(F1_2020::LobbyInfo(header)),
+            id => Err(format!("Unknown packet type: {}", id)),
+        }
     }
 }
