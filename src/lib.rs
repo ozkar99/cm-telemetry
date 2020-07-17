@@ -30,9 +30,9 @@ impl<T: TelemetryEvent> TelemetryServer<T> {
         })
     }
 
-    /// next_event will call recv on the inner UDP server (this blocks)
+    /// next will call recv on the inner UDP server (this blocks)
     /// and will call from_packet from the given T
-    pub fn next_event(&self) -> Result<T, Box<dyn std::error::Error>> {
+    pub fn next(&self) -> Result<T, Box<dyn std::error::Error>> {
         let packet = self.srv.recv()?;
         T::from_packet(&packet)
     }
