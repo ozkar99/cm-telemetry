@@ -1,9 +1,10 @@
 use std::error::Error;
+use std::io::Cursor;
 
 use crate::{TelemetryEvent, TelemetryPacket};
 
-extern crate byteorder;
-use byteorder::{ByteOrder, LittleEndian};
+extern crate binread;
+use binread::{BinRead, BinReaderExt};
 
 /// F1_2020 implements the codemasters UDP telemetry protocol for "F1 2020"
 /// see: https://forums.codemasters.com/topic/50942-f1-2020-udp-specification/
@@ -20,6 +21,7 @@ pub enum F1_2020 {
     LobbyInfo(LobbyInfo),
 }
 
+#[derive(Debug, BinRead)]
 pub struct Header {
     pub packet_format: u16,
     pub game_major_version: u8,
@@ -33,81 +35,106 @@ pub struct Header {
     pub secondary_player_car_index: u8,
 }
 
+#[derive(BinRead)]
 pub struct Motion {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct Session {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct LapData {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct Event {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct Participants {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct CarSetups {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct CarTelemetry {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct CarStatus {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct FinalClassification {
     pub header: Header,
 }
 
+#[derive(BinRead)]
 pub struct LobbyInfo {
     pub header: Header,
 }
 
 impl TelemetryEvent for F1_2020 {
     fn from_packet(packet: &TelemetryPacket) -> Result<F1_2020, Box<dyn Error>> {
-        let header = Header::from_packet(packet)?;
-        match header.packet_id {
-            0 => Ok(F1_2020::Motion(Motion { header })),
-            1 => Ok(F1_2020::Session(Session { header })),
-            2 => Ok(F1_2020::LapData(LapData { header })),
-            3 => Ok(F1_2020::Event(Event { header })),
-            4 => Ok(F1_2020::Participants(Participants { header })),
-            5 => Ok(F1_2020::CarSetups(CarSetups { header })),
-            6 => Ok(F1_2020::CarTelemetry(CarTelemetry { header })),
-            7 => Ok(F1_2020::CarStatus(CarStatus { header })),
-            8 => Ok(F1_2020::FinalClassification(FinalClassification { header })),
-            9 => Ok(F1_2020::LobbyInfo(LobbyInfo { header })),
-            id => Err(Box::from(format!("Unknown packet type: {}", id))),
-        }
-    }
-}
-
-impl Header {
-    fn from_packet(packet: &TelemetryPacket) -> Result<Header, Box<dyn Error>> {
         if packet.len() < 24 {
             return Err(Box::from("Packet is too small to contain a header"));
         }
-        Ok(Header {
-            packet_format: LittleEndian::read_u16(&packet[0..2]),
-            game_major_version: packet[2],
-            game_minor_version: packet[3],
-            packet_version: packet[4],
-            packet_id: packet[5],
-            session_uid: LittleEndian::read_u64(&packet[6..14]),
-            session_time: LittleEndian::read_f32(&packet[14..18]),
-            frame_identifier: LittleEndian::read_u32(&packet[18..22]),
-            player_car_index: packet[22],
-            secondary_player_car_index: packet[23],
-        })
+
+        let packet_id = packet[5];
+        let mut reader = Cursor::new(packet);
+        match packet_id {
+            0 => {
+                let data: Motion = reader.read_le()?;
+                Ok(F1_2020::Motion(data))
+            }
+            1 => {
+                let data: Session = reader.read_le()?;
+                Ok(F1_2020::Session(data))
+            }
+            2 => {
+                let data: LapData = reader.read_le()?;
+                Ok(F1_2020::LapData(data))
+            }
+            3 => {
+                let data: Event = reader.read_le()?;
+                Ok(F1_2020::Event(data))
+            }
+            4 => {
+                let data: Participants = reader.read_le()?;
+                Ok(F1_2020::Participants(data))
+            }
+            5 => {
+                let data: CarSetups = reader.read_le()?;
+                Ok(F1_2020::CarSetups(data))
+            }
+            6 => {
+                let data: CarTelemetry = reader.read_le()?;
+                Ok(F1_2020::CarTelemetry(data))
+            }
+            7 => {
+                let data: CarStatus = reader.read_le()?;
+                Ok(F1_2020::CarStatus(data))
+            }
+            8 => {
+                let data: FinalClassification = reader.read_le()?;
+                Ok(F1_2020::FinalClassification(data))
+            }
+            9 => {
+                let data: LobbyInfo = reader.read_le()?;
+                Ok(F1_2020::LobbyInfo(data))
+            }
+            id => Err(Box::from(format!("Unknown packet type: {}", id))),
+        }
     }
 }

@@ -11,3 +11,4 @@ edition = "2018"
 
 [dependencies]
 byteorder = "1"
+binread = "1"
