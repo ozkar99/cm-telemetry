@@ -24,7 +24,7 @@ pub enum F1_2020 {
     LobbyInfo(LobbyInfo),
 }
 
-#[derive(Debug, BinRead)]
+#[derive(Debug, Default, BinRead)]
 pub struct Header {
     pub packet_format: u16,
     pub game_major_version: u8,
@@ -38,14 +38,14 @@ pub struct Header {
     pub secondary_player_car_index: u8,
 }
 
-#[derive(BinRead, Default)]
+#[derive(Debug, Default, BinRead)]
 pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-#[derive(BinRead, Default)]
+#[derive(Debug, Default, BinRead)]
 pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
     pub rear_left: T,
     pub rear_right: T,
@@ -53,7 +53,7 @@ pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
     pub front_right: T,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct Motion {
     pub header: Header,
     pub car_motion_data: [CarMotionData; 22],
@@ -69,7 +69,15 @@ pub struct Motion {
     pub front_wheel_angle: f32,
 }
 
-#[derive(BinRead, Default)]
+impl Motion {
+    /// player_data returns the CarMotionData asociated with the player
+    pub fn player_data(&self) -> &CarMotionData {
+        let player_index = self.header.player_car_index as usize;
+        &self.car_motion_data[player_index]
+    }
+}
+
+#[derive(Debug, Default, BinRead)]
 pub struct CarMotionData {
     pub world_position: Coordinates<f32>,
     pub world_velocity: Coordinates<f32>,
@@ -83,47 +91,219 @@ pub struct CarMotionData {
     pub roll: f32,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct Session {
     pub header: Header,
+
+    pub weather: Weather,
+    pub track_temperature: i8,
+    pub air_temperature: i8,
+    pub total_laps: i8,
+    pub track_length: i16,
+    pub session_type: u8,
+    pub track_id: i8,
+    pub formula: u8,
+    pub session_time_left: u16,
+    pub session_duration: u16,
+    pub pit_speed_limit: u8,
+    pub game_paused: u8,
+    pub is_spectating: u8,
+    pub spectator_car_index: u8,
+    pub sli_pro_native_support: u8,
+    pub number_of_marshal_zones: u8,
+    pub marshal_zones: [MarshalZone; 21],
+    pub safety_car_status: u8,
+    pub network_game: u8,
+    pub number_of_weather_forecast_samples: u8,
+    pub weather_forecast_samples: [WeatherForecastSample; 20],
 }
 
-#[derive(BinRead)]
+impl Session {
+    pub fn current_weather_forecast_sample(&self) -> &WeatherForecastSample {
+        let mut current_weather_forecast_sample_index =
+            self.number_of_weather_forecast_samples as usize;
+        if current_weather_forecast_sample_index > 0 {
+            current_weather_forecast_sample_index -= 1;
+        }
+        &self.weather_forecast_samples[current_weather_forecast_sample_index]
+    }
+}
+
+#[derive(Debug)]
+pub enum Weather {
+    Unknown,
+    Clear,
+    LigthCloud,
+    Overcast,
+    LightRain,
+    HeavyRain,
+    Storm,
+}
+
+impl Default for Weather {
+    fn default() -> Weather {
+        Weather::Unknown
+    }
+}
+
+impl BinRead for Weather {
+    type Args = ();
+    fn read_options<R: binread::io::Read + binread::io::Seek>(
+        reader: &mut R,
+        _options: &binread::ReadOptions,
+        _args: Self::Args,
+    ) -> binread::BinResult<Self> {
+        let mut val = [0; core::mem::size_of::<u8>()];
+        reader.read_exact(&mut val)?;
+        match val[0] {
+            0 => Ok(Weather::Clear),
+            1 => Ok(Weather::LigthCloud),
+            2 => Ok(Weather::Overcast),
+            3 => Ok(Weather::LightRain),
+            4 => Ok(Weather::HeavyRain),
+            5 => Ok(Weather::Storm),
+            _ => Ok(Weather::Unknown),
+        }
+    }
+}
+
+#[derive(BinRead, Default, Debug)]
+pub struct MarshalZone {
+    pub zone_start: f32,
+    pub zone_flag: ZoneFlag,
+}
+
+#[derive(Debug)]
+pub enum ZoneFlag {
+    Unknown,
+    None,
+    Green,
+    Blue,
+    Yellow,
+    Red,
+}
+
+impl Default for ZoneFlag {
+    fn default() -> ZoneFlag {
+        ZoneFlag::Unknown
+    }
+}
+
+impl BinRead for ZoneFlag {
+    type Args = ();
+    fn read_options<R: binread::io::Read + binread::io::Seek>(
+        reader: &mut R,
+        _options: &binread::ReadOptions,
+        _args: Self::Args,
+    ) -> binread::BinResult<Self> {
+        let mut val = [0; core::mem::size_of::<i8>()];
+        reader.read_exact(&mut val)?;
+        match val[0] {
+            0 => Ok(ZoneFlag::None),
+            1 => Ok(ZoneFlag::Green),
+            2 => Ok(ZoneFlag::Blue),
+            3 => Ok(ZoneFlag::Yellow),
+            4 => Ok(ZoneFlag::Red),
+            _ => Ok(ZoneFlag::Unknown),
+        }
+    }
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct WeatherForecastSample {
+    pub session_type: SessionType,
+    pub time_offset: u8,
+    pub weather: Weather,
+    pub track_temperature: i8,
+    pub air_temperature: i8,
+}
+
+#[derive(Debug)]
+pub enum SessionType {
+    Unknown,
+    Practice1,
+    Practice2,
+    Practice3,
+    ShortPractice,
+    Qualifier1,
+    Qualifier2,
+    Qualifier3,
+    ShortQualifier,
+    OSQ,
+    Race,
+    Formula2Race,
+    TimeTrial,
+}
+
+impl Default for SessionType {
+    fn default() -> SessionType {
+        SessionType::Unknown
+    }
+}
+
+impl BinRead for SessionType {
+    type Args = ();
+    fn read_options<R: binread::io::Read + binread::io::Seek>(
+        reader: &mut R,
+        _options: &binread::ReadOptions,
+        _args: Self::Args,
+    ) -> binread::BinResult<Self> {
+        let mut val = [0; core::mem::size_of::<u8>()];
+        reader.read_exact(&mut val)?;
+        match val[0] {
+            1 => Ok(SessionType::Practice1),
+            2 => Ok(SessionType::Practice2),
+            3 => Ok(SessionType::Practice3),
+            4 => Ok(SessionType::ShortPractice),
+            5 => Ok(SessionType::Qualifier1),
+            6 => Ok(SessionType::Qualifier2),
+            7 => Ok(SessionType::Qualifier3),
+            8 => Ok(SessionType::ShortQualifier),
+            9 => Ok(SessionType::OSQ),
+            10 => Ok(SessionType::Race),
+            11 => Ok(SessionType::Formula2Race),
+            12 => Ok(SessionType::TimeTrial),
+            _ => Ok(SessionType::Unknown),
+        }
+    }
+}
+
+#[derive(Debug, BinRead)]
 pub struct LapData {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct Event {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct Participants {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct CarSetups {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct CarTelemetry {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct CarStatus {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct FinalClassification {
     pub header: Header,
 }
 
-#[derive(BinRead)]
+#[derive(Debug, BinRead)]
 pub struct LobbyInfo {
     pub header: Header,
 }
@@ -179,18 +359,5 @@ impl TelemetryEvent for F1_2020 {
             }
             id => Err(Box::from(format!("Unknown packet type: {}", id))),
         }
-    }
-}
-
-/// Player defines a player method, that returns the "data" struct for
-/// its respecting packet type
-pub trait Player<T> {
-    fn player(&self) -> &T;
-}
-
-impl Player<CarMotionData> for Motion {
-    fn player(&self) -> &CarMotionData {
-        let car_index = self.header.player_car_index as usize;
-        &self.car_motion_data[car_index]
     }
 }

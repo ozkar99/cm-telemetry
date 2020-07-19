@@ -1,4 +1,4 @@
-use cm_telemetry::f1::f1_2020::{Player, F1_2020};
+use cm_telemetry::f1::f1_2020::F1_2020;
 use cm_telemetry::TelemetryServer;
 
 fn main() {
@@ -15,8 +15,14 @@ fn main() {
         }
 
         match event.unwrap() {
-            F1_2020::Motion(_) => println!("Motion packet received"),
-            F1_2020::Session(_) => println!("Session packet received"),
+            F1_2020::Motion(data) => println!(
+                "Motion packet received: {:?}",
+                data.player_data().world_position
+            ),
+            F1_2020::Session(data) => println!(
+                "Session packet received: {:?}",
+                data.current_weather_forecast_sample()
+            ),
             F1_2020::LapData(_) => println!("LapData packet received"),
             F1_2020::Event(_) => println!("Event packet received"),
             F1_2020::Participants(_) => println!("Participants packet received"),

@@ -6,10 +6,9 @@ repository = "https://github.com/ozkar99/cm-telemetry"
 readme = "README.md"
 description = "Implementation of the telemetry UDP protocol for codemasters (and friends) games"
 license = "MIT"
-license-file = "LICENSE"
 edition = "2018"
 
 [dependencies]
 num = "0.3"
-byteorder = "1"
 binread = "1"
+byteorder = "1"
