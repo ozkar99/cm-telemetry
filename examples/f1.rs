@@ -1,4 +1,4 @@
-use cm_telemetry::f1::f1_2020::F1_2020;
+use cm_telemetry::f1::f1_2020::{Player, F1_2020};
 use cm_telemetry::TelemetryServer;
 
 fn main() {

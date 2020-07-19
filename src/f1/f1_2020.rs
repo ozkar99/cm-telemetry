@@ -24,7 +24,7 @@ pub enum F1_2020 {
     LobbyInfo(LobbyInfo),
 }
 
-#[derive(Debug,BinRead)]
+#[derive(Debug, BinRead)]
 pub struct Header {
     pub packet_format: u16,
     pub game_major_version: u8,
@@ -38,14 +38,14 @@ pub struct Header {
     pub secondary_player_car_index: u8,
 }
 
-#[derive(BinRead,Default)]
+#[derive(BinRead, Default)]
 pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-#[derive(BinRead,Default)]
+#[derive(BinRead, Default)]
 pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
     pub rear_left: T,
     pub rear_right: T,
@@ -69,7 +69,7 @@ pub struct Motion {
     pub front_wheel_angle: f32,
 }
 
-#[derive(BinRead,Default)]
+#[derive(BinRead, Default)]
 pub struct CarMotionData {
     pub world_position: Coordinates<f32>,
     pub world_velocity: Coordinates<f32>,
@@ -179,5 +179,18 @@ impl TelemetryEvent for F1_2020 {
             }
             id => Err(Box::from(format!("Unknown packet type: {}", id))),
         }
+    }
+}
+
+/// Player defines a player method, that returns the "data" struct for
+/// its respecting packet type
+pub trait Player<T> {
+    fn player(&self) -> &T;
+}
+
+impl Player<CarMotionData> for Motion {
+    fn player(&self) -> &CarMotionData {
+        let car_index = self.header.player_car_index as usize;
+        &self.car_motion_data[car_index]
     }
 }
