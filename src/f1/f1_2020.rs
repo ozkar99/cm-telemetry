@@ -3,6 +3,9 @@ use std::io::Cursor;
 
 use crate::{TelemetryEvent, TelemetryPacket};
 
+extern crate num;
+use num::Num;
+
 extern crate binread;
 use binread::{BinRead, BinReaderExt};
 
@@ -21,7 +24,7 @@ pub enum F1_2020 {
     LobbyInfo(LobbyInfo),
 }
 
-#[derive(Debug, BinRead)]
+#[derive(Debug,BinRead)]
 pub struct Header {
     pub packet_format: u16,
     pub game_major_version: u8,
@@ -35,9 +38,49 @@ pub struct Header {
     pub secondary_player_car_index: u8,
 }
 
+#[derive(BinRead,Default)]
+pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
+}
+
+#[derive(BinRead,Default)]
+pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
+    pub rear_left: T,
+    pub rear_right: T,
+    pub front_left: T,
+    pub front_right: T,
+}
+
 #[derive(BinRead)]
 pub struct Motion {
     pub header: Header,
+    pub car_motion_data: [CarMotionData; 22],
+
+    pub suspension_position: WheelValue<f32>,
+    pub suspension_velocity: WheelValue<f32>,
+    pub suspension_acceleration: WheelValue<f32>,
+    pub wheel_speed: WheelValue<f32>,
+    pub wheel_slip: WheelValue<f32>,
+    pub local_velocity: Coordinates<f32>,
+    pub angular_velocity: Coordinates<f32>,
+    pub angular_acceleration: Coordinates<f32>,
+    pub front_wheel_angle: f32,
+}
+
+#[derive(BinRead,Default)]
+pub struct CarMotionData {
+    pub world_position: Coordinates<f32>,
+    pub world_velocity: Coordinates<f32>,
+    pub world_forward_dir: Coordinates<i16>,
+    pub world_right_dir: Coordinates<i16>,
+    pub g_force_lateral: f32,
+    pub g_force_longitudinal: f32,
+    pub g_force_vertical: f32,
+    pub yaw: f32,
+    pub pitch: f32,
+    pub roll: f32,
 }
 
 #[derive(BinRead)]
