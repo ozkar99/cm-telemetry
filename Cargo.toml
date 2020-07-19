@@ -10,5 +10,6 @@ edition = "2018"
 
 [dependencies]
 num = "0.3"
+enum_default = "0.1"
 binread = "1"
 byteorder = "1"

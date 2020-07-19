@@ -3,6 +3,9 @@ use std::io::Cursor;
 
 use crate::{TelemetryEvent, TelemetryPacket};
 
+extern crate enum_default;
+use enum_default::EnumDefault;
+
 extern crate num;
 use num::Num;
 
@@ -129,7 +132,7 @@ impl Session {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, EnumDefault)]
 pub enum Weather {
     Unknown,
     Clear,
@@ -138,12 +141,6 @@ pub enum Weather {
     LightRain,
     HeavyRain,
     Storm,
-}
-
-impl Default for Weather {
-    fn default() -> Weather {
-        Weather::Unknown
-    }
 }
 
 impl BinRead for Weather {
@@ -173,7 +170,7 @@ pub struct MarshalZone {
     pub zone_flag: ZoneFlag,
 }
 
-#[derive(Debug)]
+#[derive(Debug, EnumDefault)]
 pub enum ZoneFlag {
     Unknown,
     None,
@@ -181,12 +178,6 @@ pub enum ZoneFlag {
     Blue,
     Yellow,
     Red,
-}
-
-impl Default for ZoneFlag {
-    fn default() -> ZoneFlag {
-        ZoneFlag::Unknown
-    }
 }
 
 impl BinRead for ZoneFlag {
@@ -218,7 +209,7 @@ pub struct WeatherForecastSample {
     pub air_temperature: i8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, EnumDefault)]
 pub enum SessionType {
     Unknown,
     Practice1,
@@ -233,12 +224,6 @@ pub enum SessionType {
     Race,
     Formula2Race,
     TimeTrial,
-}
-
-impl Default for SessionType {
-    fn default() -> SessionType {
-        SessionType::Unknown
-    }
 }
 
 impl BinRead for SessionType {
