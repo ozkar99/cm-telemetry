@@ -20,8 +20,8 @@ fn main() {
                 data.player_data().world_position
             ),
             F1_2020::Session(data) => println!(
-                "Session packet received: {:?}",
-                data.current_weather_forecast_sample()
+                "Session packet received: {:?}, {:?}, {:?}",
+                data.session_type, data.track, data.weather
             ),
             F1_2020::LapData(_) => println!("LapData packet received"),
             F1_2020::Event(_) => println!("Event packet received"),

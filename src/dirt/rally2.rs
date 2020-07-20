@@ -1,7 +1,6 @@
 use crate::{TelemetryEvent, TelemetryPacket};
 use std::error::Error;
 
-extern crate byteorder;
 use byteorder::{ByteOrder, LittleEndian};
 
 /// DirtRally2 implements the codemasters UDP telemetry protocol for "Dirt Rally 2.0"
