@@ -103,7 +103,8 @@ pub struct Session {
     pub session_type: SessionType,
     #[br(map = |x: i8| Track::try_from(x).unwrap())]
     pub track: Track,
-    pub formula: u8,
+    #[br(map = |x:u8| Formula::try_from(x).unwrap())]
+    pub formula: Formula,
     pub session_time_left: u16,
     pub session_duration: u16,
     pub pit_speed_limit: u8,
@@ -172,6 +173,15 @@ pub enum Track {
     SuzukaShort,
     Hanoi,
     Zandvoort,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum Formula {
+    F1Modern,
+    F1Classic,
+    F2,
+    F1Generic,
 }
 
 #[derive(Debug, Default, BinRead)]
