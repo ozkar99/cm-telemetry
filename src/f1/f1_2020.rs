@@ -103,7 +103,7 @@ pub struct Session {
     pub session_type: SessionType,
     #[br(map = |x: i8| Track::try_from(x).unwrap())]
     pub track: Track,
-    #[br(map = |x:u8| Formula::try_from(x).unwrap())]
+    #[br(map = |x: u8| Formula::try_from(x).unwrap())]
     pub formula: Formula,
     pub session_time_left: u16,
     pub session_duration: u16,
@@ -114,8 +114,10 @@ pub struct Session {
     pub sli_pro_native_support: u8,
     pub number_of_marshal_zones: u8,
     pub marshal_zones: [MarshalZone; 21],
-    pub safety_car_status: u8,
-    pub network_game: u8,
+    #[br(map = |x: u8| SafetyCarStatus::try_from(x).unwrap())]
+    pub safety_car_status: SafetyCarStatus,
+    #[br(map = |x: u8| x > 0)]
+    pub network_game: bool,
     pub number_of_weather_forecast_samples: u8,
     pub weather_forecast_samples: [WeatherForecastSample; 20],
 }
@@ -182,6 +184,14 @@ pub enum Formula {
     F1Classic,
     F2,
     F1Generic,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum SafetyCarStatus {
+    NoSafetyCar,
+    FullSafetyCar,
+    VirtualSafetyCar,
 }
 
 #[derive(Debug, Default, BinRead)]
