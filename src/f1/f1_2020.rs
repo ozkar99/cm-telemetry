@@ -244,7 +244,96 @@ pub enum SessionType {
 #[derive(Debug, BinRead)]
 pub struct LapData {
     pub header: Header,
+    pub laps: [Lap; 22],
 }
+
+#[derive(Debug, Default, BinRead)]
+pub struct Lap {
+    pub last_lap_time: f32,
+    pub current_lap_time: f32,
+    pub sector_time_ms: (u16, u16), // sector1, sector2 (no sector3 for some reason)
+    pub best_lap_time: f32,
+    pub best_lap_number: u8,
+    pub best_lap_sector_time: (u16, u16, u16), // sector1, sector2, sector3
+    pub best_overall_sector_time: (BestOverallSectorTime, BestOverallSectorTime, BestOverallSectorTime), // sector1, sector2, sector3
+    pub lap_distance: f32,
+    pub total_distance: f32,
+    pub safety_car_delta: f32,
+    pub car_position: u8,
+    pub current_lap_number: u8,
+    #[br(map = |x: u8| PitStatus::try_from(x).unwrap())]
+    pub pit_status: PitStatus,
+    #[br(map = |x: u8| Sector::try_from(x).unwrap())]
+    pub sector: Sector,
+    #[br(map = |x: u8| x > 0)]
+    pub current_lap_invalid: bool,
+    pub penalties: u8,
+    pub grid_position: u8,
+    #[br(map = |x: u8| DriverStatus::try_from(x).unwrap())]
+    pub driver_status: DriverStatus,
+    #[br(map = |x: u8| ResultStatus::try_from(x).unwrap())]
+    pub result_status: ResultStatus,
+}
+
+impl LapData {
+    /// player_data returns the Lap asociated with the player
+    pub fn player_data(&self) -> &Lap {
+        let player_index = self.header.player_car_index as usize;
+        &self.laps[player_index]
+    }
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct BestLapSectorTime {
+    pub sector1: u16,
+    pub sector2: u16,
+    pub sector3: u16,
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct BestOverallSectorTime {
+    pub sector_time: u16,
+    pub lap_number: u8,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum PitStatus {
+    None,
+    Pitting,
+    InPitArea,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum Sector {
+    Sector1,
+    Sector2,
+    Sector3,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum DriverStatus {
+    InGarage,
+    FlyingLap,
+    InLap,
+    OutLap,
+    InTrack,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum ResultStatus {
+    Invalid,
+    Inactive,
+    Active,
+    Finished,
+    Disqualified,
+    NotClassified,
+    Retired,
+}
+
 
 #[derive(Debug, BinRead)]
 pub struct Event {

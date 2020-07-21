@@ -23,7 +23,10 @@ fn main() {
                 "Session packet received: {:?}, {:?}, {:?}, {:?}",
                 data.formula, data.session_type, data.track, data.weather
             ),
-            F1_2020::LapData(_) => println!("LapData packet received"),
+            F1_2020::LapData(data) => println!(
+                "LapData packet received: {:?}, {:?}, {:?}", 
+                data.player_data().current_lap_time, data.player_data().pit_status, data.player_data().driver_status,
+            ),
             F1_2020::Event(_) => println!("Event packet received"),
             F1_2020::Participants(_) => println!("Participants packet received"),
             F1_2020::CarSetups(_) => println!("CarSetups packet received"),
