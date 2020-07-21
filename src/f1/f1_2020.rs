@@ -255,7 +255,11 @@ pub struct Lap {
     pub best_lap_time: f32,
     pub best_lap_number: u8,
     pub best_lap_sector_time: (u16, u16, u16), // sector1, sector2, sector3
-    pub best_overall_sector_time: (BestOverallSectorTime, BestOverallSectorTime, BestOverallSectorTime), // sector1, sector2, sector3
+    pub best_overall_sector_time: (
+        BestOverallSectorTime,
+        BestOverallSectorTime,
+        BestOverallSectorTime,
+    ), // sector1, sector2, sector3
     pub lap_distance: f32,
     pub total_distance: f32,
     pub safety_car_delta: f32,
@@ -334,10 +338,176 @@ pub enum ResultStatus {
     Retired,
 }
 
-
-#[derive(Debug, BinRead)]
+#[derive(Debug)]
 pub struct Event {
     pub header: Header,
+    pub event_data_details: EventDataDetail,
+}
+
+// Event is a bit more complicated since the event_data_details
+// depends on some of the packet details, so we cant simply derive and expect it to work
+impl binread::BinRead for Event {
+    type Args = ();
+    fn read_options<R: binread::io::Read + binread::io::Seek>(
+        reader: &mut R,
+        options: &binread::ReadOptions,
+        args: Self::Args,
+    ) -> binread::BinResult<Self> {
+        let header = Header::read_options(reader, options, args)?; // re-use Header BinRead default implementation.
+
+        // Read next 4 bytes for event string identification
+        let code_bytes = <[u8; 4]>::read_options(reader, options, args)?;
+        let string = std::str::from_utf8(&code_bytes).unwrap_or("UNKW");
+
+        let event_data_details = match string {
+            "SSTA" => EventDataDetail::SessionStarted,
+            "SEND" => EventDataDetail::SessionEnded,
+            "FTLP" => {
+                let idx = <u8>::read_options(reader, options, args)?;
+                let time = <f32>::read_options(reader, options, args)?;
+                EventDataDetail::FastestLap(idx, time)
+            }
+            "RTMT" => {
+                let idx = <u8>::read_options(reader, options, args)?;
+                EventDataDetail::Retirement(idx)
+            }
+            "DRSE" => EventDataDetail::DRSEnabled,
+            "DRSD" => EventDataDetail::DRSDisabled,
+            "TMPT" => {
+                let idx = <u8>::read_options(reader, options, args)?;
+                EventDataDetail::TeamMateInPits(idx)
+            }
+            "CHQF" => EventDataDetail::ChequeredFlag,
+            "RCWN" => {
+                let idx = <u8>::read_options(reader, options, args)?;
+                EventDataDetail::RaceWinner(idx)
+            }
+            "PENA" => {
+                let detail = PenaltyEventDetail::read_options(reader, options, args)?;
+                EventDataDetail::Penalty(detail)
+            }
+            "SPTP" => {
+                let idx = <u8>::read_options(reader, options, args)?;
+                let speed = <f32>::read_options(reader, options, args)?;
+                EventDataDetail::SpeedTrap(idx, speed)
+            }
+            _ => EventDataDetail::Unknown,
+        };
+
+        Ok(Event {
+            header,
+            event_data_details,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub enum EventDataDetail {
+    SessionStarted,
+    SessionEnded,
+    FastestLap(u8, f32), // time
+    Retirement(u8),      // car_index
+    DRSEnabled,
+    DRSDisabled,
+    TeamMateInPits(u8), // car_index
+    ChequeredFlag,
+    RaceWinner(u8), // car_index
+    Penalty(PenaltyEventDetail),
+    SpeedTrap(u8, f32), // car_index, speed
+    Unknown,            // not part of the spec, added to satisfy match
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct PenaltyEventDetail {
+    #[br(map = |x: u8| PenaltyType::try_from(x).unwrap())]
+    pub penalty_type: PenaltyType,
+    #[br(map = |x: u8| InfringementType::try_from(x).unwrap())]
+    pub infrigement_type: InfringementType,
+    pub vehicle_index: u8,
+    pub other_vehicle_index: u8,
+    pub time: u8,
+    pub lap_number: u8,
+    pub places_gained: u8,
+}
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum PenaltyType {
+    DriveThrough,
+    StopGo,
+    GridPenalty,
+    PenaltyReminder,
+    TimePenalty,
+    Warning,
+    Disqualified,
+    RemovedFromFormationLap,
+    ParkedTooLongTimer,
+    TyreRegulations,
+    ThisLapInvalidated,
+    ThisAndNextLapInvalidated,
+    ThisLapInvalidatedWithNoReason,
+    ThisAndNextLapInvalidatedWithNoReason,
+    ThisAndPreviousLapInvalidated,
+    ThisAndPreviousLapInvalidatedWithNoReason,
+    Retired,
+    BlackFlagTimer,
+}
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum InfringementType {
+    BlockingBySlowDriving,
+    BlockingByWrongWayDriving,
+    ReversingOffTheStartLine,
+    BigCollision,
+    SmallCollision,
+    CollisionFailedToHandBackPositionSingle,
+    CollisionFailedToHandBackPositionMultiple,
+    CornerCuttingGainedTime,
+    CornerCuttingOvertakeSingle,
+    CornerCuttingOvertakeMultiple,
+    CrossedPitExitLane,
+    IgnoringBlueFlags,
+    IgnoringYellowFlags,
+    IgnoringDriveThrough,
+    TooManyDriveThroughs,
+    DriveThroughReminderServeWithinNLaps,
+    DriveThroughReminderServeThisLap,
+    PitLaneSpeeding,
+    ParkedForTooLong,
+    IgnoringTyreRegulations,
+    TooManyPenalties,
+    MultipleWarnings,
+    ApproachingDisqualification,
+    TyreRegulationsSelectSingle,
+    TyreRegulationsSelectMultiple,
+    LapInvalidatedCornerCutting,
+    LapInvalidatedRunningWide,
+    CornerCuttingRanWideGainedTimeMinor,
+    CornerCuttingRanWideGainedTimeSignificant,
+    CornerCuttingRanWideGainedTimeExtreme,
+    LapInvalidatedWallRiding,
+    LapInvalidatedFlashbackUsed,
+    LapInvalidatedResetToTrack,
+    BlockingThePitlane,
+    JumpStart,
+    SafetyCarToCarCollision,
+    SafetyCarIllegalOvertake,
+    SafetyCarExceedingAllowedPace,
+    VirtualSafetyCarExceedingAllowedPace,
+    FormationLapBelowAllowedSpeed,
+    RetiredMechanicalFailure,
+    RetiredTerminallyDamaged,
+    SafetyCarFallingTooFarBack,
+    BlackFlagTimer,
+    UnservedStopGoPenalty,
+    UnservedDriveThroughPenalty,
+    EngineComponentChange,
+    GearboxChange,
+    LeagueGridPenalty,
+    RetryPenalty,
+    IllegalTimeGain,
+    MandatoryPitstop,
 }
 
 #[derive(Debug, BinRead)]
@@ -376,7 +546,7 @@ impl TelemetryEvent for F1_2020 {
             return Err(Box::from("Packet is too small to contain a header"));
         }
 
-        let packet_id = packet[5];
+        let packet_id = packet[5]; // packet_id
         let mut reader = Cursor::new(packet);
         match packet_id {
             0 => {
