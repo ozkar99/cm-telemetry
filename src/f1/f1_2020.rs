@@ -356,10 +356,10 @@ impl binread::BinRead for Event {
         let header = Header::read_options(reader, options, args)?; // re-use Header BinRead default implementation.
 
         // Read next 4 bytes for event string identification
-        let code_bytes = <[u8; 4]>::read_options(reader, options, args)?;
-        let string = std::str::from_utf8(&code_bytes).unwrap_or("UNKW");
+        let event_code_bytes = <[u8; 4]>::read_options(reader, options, args)?;
+        let event_code = std::str::from_utf8(&event_code_bytes).unwrap_or("UNKW");
 
-        let event_data_details = match string {
+        let event_data_details = match event_code {
             "SSTA" => EventDataDetail::SessionStarted,
             "SEND" => EventDataDetail::SessionEnded,
             "FTLP" => {
