@@ -610,7 +610,7 @@ pub enum Driver {
     LucaGhiotto,
     LandoNorris,
     SergioSetteCamara = 55, // Sérgio Sette Câmara
-    LouisDeletraz = 56,     // Louis Delétraz
+    LouisDeletraz,     // Louis Delétraz
     AntonioFuoco,
     CharlesLeclerc,
     PierreGasly,
