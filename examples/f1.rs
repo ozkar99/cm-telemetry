@@ -30,14 +30,17 @@ fn main() {
                 data.player_data().driver_status,
             ),
             F1_2020::Event(data) => {
-                println!("Event packet received: {:?}", data.event_data_details,)
+                println!("Event packet received: {:?}", data.event_data_details)
             }
-            F1_2020::Participants(_) => println!("Participants packet received"),
-            F1_2020::CarSetups(_) => println!("CarSetups packet received"),
-            F1_2020::CarTelemetry(_) => println!("CarTelemtry packet received"),
-            F1_2020::CarStatus(_) => println!("CarStatus packet received"),
-            F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
-            F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
+            F1_2020::Participants(data) => {
+                println!("Participants packet received: {:?}", data.player_data());
+            }
+            // F1_2020::CarSetups(_) => println!("CarSetups packet received"),
+            // F1_2020::CarTelemetry(_) => println!("CarTelemtry packet received"),
+            // F1_2020::CarStatus(_) => println!("CarStatus packet received"),
+            // F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
+            // F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
+            _ => (),
         }
     }
 }
