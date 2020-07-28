@@ -17,7 +17,7 @@ pub enum F1_2020 {
     LapData(LapData),
     Event(Event),
     Participants(Participants),
-    CarSetups(CarSetups),
+    CarSetup(CarSetup),
     CarTelemetry(CarTelemetry),
     CarStatus(CarStatus),
     FinalClassification(FinalClassification),
@@ -53,10 +53,17 @@ pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
     pub front_right: T,
 }
 
+#[derive(Debug, Default, BinRead)]
+pub struct FrontRearValue<T: Num + binread::BinRead<Args = ()>> {
+    pub front: T,
+    pub rear: T,
+}
+
 #[derive(Debug, BinRead)]
 pub struct Motion {
     pub header: Header,
-    pub car_motion_data: [CarMotionData; 22],
+    #[br(count = 22)]
+    pub car_motion_data: Vec<CarMotionData>,
     pub suspension_position: WheelValue<f32>,
     pub suspension_velocity: WheelValue<f32>,
     pub suspension_acceleration: WheelValue<f32>,
@@ -244,7 +251,8 @@ pub enum SessionType {
 #[derive(Debug, BinRead)]
 pub struct LapData {
     pub header: Header,
-    pub laps: [Lap; 22],
+    #[br(count = 22)]
+    pub laps: Vec<Lap>,
 }
 
 #[derive(Debug, Default, BinRead)]
@@ -522,12 +530,12 @@ pub struct Participants {
 pub struct ParticipantsData {
     #[br(map = |x: u8| x > 0)]
     pub ai_controlled: bool,
-    #[br(map = |x: u8| Driver::try_from(x).unwrap())]
+    #[br(map = |x: u8| Driver::try_from(x).unwrap_or(Driver::Unknown))]
     pub driver: Driver,
     #[br(map = |x: u8| Team::try_from(x).unwrap())]
     pub team: Team,
     pub race_number: u8,
-    #[br(map = |x: u8| Nationality::try_from(x).unwrap())]
+    #[br(map = |x: u8| Nationality::try_from(x).unwrap_or(Nationality::Unknown))]
     pub nationality: Nationality,
     #[br(parse_with = participant_name_parser)]
     pub name: String,
@@ -610,7 +618,7 @@ pub enum Driver {
     LucaGhiotto,
     LandoNorris,
     SergioSetteCamara = 55, // Sérgio Sette Câmara
-    LouisDeletraz,     // Louis Delétraz
+    LouisDeletraz,          // Louis Delétraz
     AntonioFuoco,
     CharlesLeclerc,
     PierreGasly,
@@ -640,6 +648,7 @@ pub enum Driver {
     GuilianoAlesi,
     RalphBoschung,
     MyDriver = 100,
+    Unknown = 255, // Used for time trial "ghost" drivers that appear randomly
 }
 
 #[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
@@ -707,7 +716,8 @@ pub enum Team {
 #[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Nationality {
-    American = 1,
+    Unknown,
+    American,
     Argentinean,
     Australian,
     Austrian,
@@ -798,8 +808,34 @@ pub enum Nationality {
 }
 
 #[derive(Debug, BinRead)]
-pub struct CarSetups {
+pub struct CarSetup {
     pub header: Header,
+    #[br(count = 22)]
+    pub car_setup_data: Vec<CarSetupData>,
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct CarSetupData {
+    pub wing: FrontRearValue<u8>,
+    pub on_throttle: u8,
+    pub off_throttle: u8,
+    pub camber: FrontRearValue<f32>,
+    pub toe: FrontRearValue<f32>,
+    pub suspension: FrontRearValue<u8>,
+    pub anti_roll_bar: FrontRearValue<u8>,
+    pub suspension_height: FrontRearValue<u8>,
+    pub brake_pressure: u8,
+    pub brake_bias: u8,
+    pub type_pressure: WheelValue<f32>,
+    pub ballast: u8,
+    pub fuel_load: f32,
+}
+
+impl CarSetup {
+    pub fn player_data(&self) -> &CarSetupData {
+        let player_idx = self.header.player_car_index as usize;
+        &self.car_setup_data[player_idx]
+    }
 }
 
 #[derive(Debug, BinRead)]
@@ -852,8 +888,8 @@ impl TelemetryEvent for F1_2020 {
                 Ok(F1_2020::Participants(data))
             }
             5 => {
-                let data: CarSetups = reader.read_le()?;
-                Ok(F1_2020::CarSetups(data))
+                let data: CarSetup = reader.read_le()?;
+                Ok(F1_2020::CarSetup(data))
             }
             6 => {
                 let data: CarTelemetry = reader.read_le()?;

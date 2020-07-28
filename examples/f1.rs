@@ -32,10 +32,14 @@ fn main() {
             F1_2020::Event(data) => {
                 println!("Event packet received: {:?}", data.event_data_details)
             }
-            F1_2020::Participants(data) => {
-                println!("Participants packet received: {:?}", data.player_data());
-            }
-            // F1_2020::CarSetups(_) => println!("CarSetups packet received"),
+            F1_2020::Participants(data) => println!(
+                "Participants packet received: {:?}",
+                data.player_data().name
+            ),
+            F1_2020::CarSetup(data) => println!(
+                "CarSetups packet received: {:?}",
+                data.player_data().fuel_load
+            ),
             // F1_2020::CarTelemetry(_) => println!("CarTelemtry packet received"),
             // F1_2020::CarStatus(_) => println!("CarStatus packet received"),
             // F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
