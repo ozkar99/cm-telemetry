@@ -46,7 +46,7 @@ pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
 }
 
 #[derive(Debug, Default, BinRead)]
-pub struct WheelValue<T: Num + binread::BinRead<Args = ()>> {
+pub struct WheelValue<T: binread::BinRead<Args = ()>> {
     pub rear_left: T,
     pub rear_right: T,
     pub front_left: T,
@@ -841,6 +841,106 @@ impl CarSetup {
 #[derive(Debug, BinRead)]
 pub struct CarTelemetry {
     pub header: Header,
+    #[br(count = 22)]
+    pub car_telemetry_data: Vec<CarTelemetryData>,
+    pub button_status: u32,
+    #[br(map = |x: u8| MFDPanel::try_from(x).unwrap_or(MFDPanel::Unknown))]
+    pub mfd_panel: MFDPanel,
+    #[br(map = |x: u8| MFDPanel::try_from(x).unwrap_or(MFDPanel::Unknown))]
+    pub mfd_panel_secondary_player: MFDPanel,
+    #[br(map = |x: i8| if x == 0 { Gear::Unknown } else { Gear::try_from(x).unwrap() })]
+    pub suggested_gear: Gear,
+}
+
+impl CarTelemetry {
+    pub fn player_data(&self) -> &CarTelemetryData {
+        let player_index = self.header.player_car_index as usize;
+        &self.car_telemetry_data[player_index]
+    }
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct CarTelemetryData {
+    pub speed: u16,
+    pub throttle: f32,
+    pub steer: f32,
+    pub brake: f32,
+    pub clutch: u8,
+    #[br(map = |x: i8| Gear::try_from(x).unwrap())]
+    pub gear: Gear,
+    pub engine_rpm: u16,
+    #[br(map = |x: u8| x > 0)]
+    pub drs: bool,
+    pub rev_lights_percent: u8,
+    pub brake_temp: WheelValue<u16>,
+    pub tyres_surface_temp: WheelValue<u8>,
+    pub tyres_inner_temp: WheelValue<u8>,
+    pub engine_temp: u16,
+    pub tyres_pressure: WheelValue<f32>,
+    #[br(parse_with = surface_type_parser )]
+    pub surface_type: WheelValue<Surface>,
+}
+
+fn surface_type_parser<R: binread::io::Read + binread::io::Seek>(
+    reader: &mut R,
+    _: &binread::ReadOptions,
+    _: (),
+) -> binread::BinResult<WheelValue<Surface>> {
+    let mut bytes: [u8; 4] = [0; 4];
+    reader.read_exact(&mut bytes)?;
+
+    Ok(WheelValue::<Surface> {
+        rear_left: Surface::try_from(bytes[0]).unwrap_or(Surface::Unknown),
+        rear_right: Surface::try_from(bytes[1]).unwrap_or(Surface::Unknown),
+        front_left: Surface::try_from(bytes[2]).unwrap_or(Surface::Unknown),
+        front_right: Surface::try_from(bytes[3]).unwrap_or(Surface::Unknown),
+    })
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(i8)]
+pub enum Gear {
+    Reverse = -1,
+    Neutral,
+    First,
+    Second,
+    Third,
+    Fourth,
+    Fifth,
+    Sixth,
+    Seventh,
+    Eigth,
+    Unknown = 127,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum Surface {
+    Tarmac,
+    RumbleStrip,
+    Concrete,
+    Rock,
+    Gravel,
+    Mud,
+    Sand,
+    Grass,
+    Water,
+    Cobblestone,
+    Metal,
+    Ridged,
+    Unknown = 255,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum MFDPanel {
+    CarSetup,
+    Pits,
+    Damage,
+    Engine,
+    Temperatures,
+    Unknown,
+    Closed = 255,
 }
 
 #[derive(Debug, BinRead)]

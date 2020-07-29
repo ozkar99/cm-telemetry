@@ -40,8 +40,12 @@ fn main() {
                 "CarSetups packet received: {:?}",
                 data.player_data().fuel_load
             ),
-            // F1_2020::CarTelemetry(_) => println!("CarTelemtry packet received"),
-            // F1_2020::CarStatus(_) => println!("CarStatus packet received"),
+            F1_2020::CarTelemetry(data) => println!(
+                "CarTelemtry packet received: {:?}, {:?}",
+                data.mfd_panel,
+                data.player_data()
+            ),
+            // F1_2020::CarStatus(_) => println!("CarStatus packet received"),,
             // F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
             // F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
             _ => (),
