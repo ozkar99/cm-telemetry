@@ -940,7 +940,132 @@ player_data!(CarStatus, CarStatusData, car_status_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarStatusData {
+    pub traction_control: u8,
+    #[br(map = |x: u8| x > 0)]
+    pub anti_lock_brakes: bool,
+    #[br(map = |x: u8| FuelMix::try_from(x).unwrap_or(FuelMix::Unknown))]
+    pub fuel_mix: FuelMix,
+    pub front_brake_bias: u8,
+    #[br(map = |x: u8| x > 0)]
+    pub pit_limiter_status: bool,
+    pub fuel_in_tank: f32,
+    pub fuel_capacity: f32,
+    pub fuel_remaining_laps: f32,
+    pub max_rpm: u16,
+    pub idle_rpm: u16,
+    pub max_gears: u8,
+    #[br(map = |x: u8| DRSAllowed::try_from(x).unwrap_or(DRSAllowed::Unknown))]
+    pub drs_allowed: DRSAllowed,
+    #[br(map = |x: u16| if x > 0 { DRSActivationDistance::Distance(x) } else { DRSActivationDistance::NotAvailable })]
+    pub drs_activation_distance: DRSActivationDistance,
+    pub tyres_wear: WheelValue<u8>,
+    #[br(map = |x: u8| TyreCompound::try_from(x).unwrap_or(TyreCompound::Unknown))]
+    pub tyres_compound: TyreCompound,
+    #[br(map = |x: u8| TyreVisual::try_from(x).unwrap_or(TyreVisual::Unknown))]
+    pub tyres_visual: TyreVisual,
+    pub tyres_ages_lap: u8,
+    pub tyres_damage: WheelValue<u8>,
+    pub wing_damage: WingValue<u8>,
+    #[br(map = |x: u8| x > 0)]
+    pub drs_fault: bool,
+    pub engine_damage: u8,
+    pub gearbox_damage: u8,
+    #[br(map = |x: i8| FiaFlag::try_from(x).unwrap_or(FiaFlag::Unknown))]
+    pub vehicle_fia_flag: FiaFlag,
+    pub ers_data: ERS,
+}
 
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum FuelMix {
+    Lean,
+    Standard,
+    Rich,
+    Max,
+    Unknown,
+}
+
+#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum DRSAllowed {
+    NotAllowed,
+    Allowed,
+    Unknown,
+}
+
+#[derive(Debug, BinRead, EnumDefault)]
+#[repr(u16)]
+pub enum DRSActivationDistance {
+    NotAvailable,
+    Distance(u16),
+}
+
+#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[repr(u8)]
+pub enum TyreCompound {
+    Inter = 7,
+    Wet,
+    F1ClassicDry,
+    F1ClassicWet,
+    F2SuperSoft,
+    F2Soft,
+    F2Medium,
+    F2Hard,
+    F2Wet,
+    C5,
+    C4,
+    C3,
+    C2,
+    C1,
+    Unknown,
+}
+
+#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[repr(u8)]
+pub enum TyreVisual {
+    Inter = 7,
+    Wet = 8,
+    Soft = 16,
+    Medium = 17,
+    Hard = 18,
+    Unknown = 255,
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct WingValue<T: binread::BinRead<Args = ()>> {
+    pub front_left: T,
+    pub front_rigth: T,
+    pub rear: T,
+}
+
+#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[repr(i8)]
+pub enum FiaFlag {
+    Unknown = -1,
+    None,
+    Green,
+    Blue,
+    Yellow,
+    Red,
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct ERS {
+    pub stored_energy: f32,
+    #[br(map = |x: u8| ERSDeployMode::try_from(x).unwrap())]
+    pub deploy_mode: ERSDeployMode,
+    pub harvested_this_lap_mguk: f32,
+    pub harvested_this_lap_mguh: f32,
+    pub deployed_this_lap: f32,
+}
+
+#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[repr(u8)]
+pub enum ERSDeployMode {
+    None,
+    Medium,
+    Overtake,
+    Hotlap,
 }
 
 #[derive(Debug, BinRead)]

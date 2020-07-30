@@ -45,7 +45,10 @@ fn main() {
                 data.mfd_panel,
                 data.player_data()
             ),
-            // F1_2020::CarStatus(_) => println!("CarStatus packet received"),,
+            F1_2020::CarStatus(data) => println!(
+                "CarStatus packet received: {:?}",
+                data.player_data().drs_activation_distance
+            ),
             // F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
             // F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
             _ => (),
