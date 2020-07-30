@@ -51,6 +51,25 @@ macro_rules! player_data {
     };
 }
 
+/// binread_enum implements a default BinRead trait for enums
+/// arguments are the enum to implement and the size of it
+/// note: enum has to have an "Unknown" element and implement TryFromPrimitive trait
+macro_rules! binread_enum {
+    ($type:ident, $repr:ident) => {
+        impl binread::BinRead for $type {
+            type Args = ();
+            fn read_options<R: binread::io::Read + binread::io::Seek>(
+                reader: &mut R,
+                options: &binread::ReadOptions,
+                args: Self::Args,
+            ) -> binread::BinResult<Self> {
+                let byte = $repr::read_options(reader, options, args)?;
+                Ok($type::try_from(byte).unwrap_or($type::Unknown))
+            }
+        }
+    };
+}
+
 #[derive(Debug, Default, BinRead)]
 pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
     pub x: T,
@@ -69,6 +88,13 @@ pub struct WheelValue<T: binread::BinRead<Args = ()>> {
 #[derive(Debug, Default, BinRead)]
 pub struct FrontRearValue<T: Num + binread::BinRead<Args = ()>> {
     pub front: T,
+    pub rear: T,
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct WingValue<T: binread::BinRead<Args = ()>> {
+    pub front_left: T,
+    pub front_right: T,
     pub rear: T,
 }
 
@@ -345,6 +371,7 @@ pub enum ResultStatus {
     Disqualified,
     NotClassified,
     Retired,
+    MechanicalFailure,
 }
 
 #[derive(Debug)]
@@ -535,7 +562,7 @@ pub struct ParticipantsData {
     pub ai_controlled: bool,
     #[br(map = |x: u8| Driver::try_from(x).unwrap_or(Driver::Unknown))]
     pub driver: Driver,
-    #[br(map = |x: u8| Team::try_from(x).unwrap())]
+    #[br(map = |x: u8| Team::try_from(x).unwrap_or(Team::Unknown))]
     pub team: Team,
     pub race_number: u8,
     #[br(map = |x: u8| Nationality::try_from(x).unwrap_or(Nationality::Unknown))]
@@ -706,6 +733,10 @@ pub enum Team {
     Benetton1995,
     Ferrari2000,
     Jordan1991,
+    Ferrari1990 = 63,
+    McLaren2010,
+    Ferrari2010,
+    Unknown = 254,
     MyTeam = 255,
 }
 
@@ -959,9 +990,7 @@ pub struct CarStatusData {
     #[br(map = |x: u16| if x > 0 { DRSActivationDistance::Distance(x) } else { DRSActivationDistance::NotAvailable })]
     pub drs_activation_distance: DRSActivationDistance,
     pub tyres_wear: WheelValue<u8>,
-    #[br(map = |x: u8| TyreCompound::try_from(x).unwrap_or(TyreCompound::Unknown))]
     pub tyres_compound: TyreCompound,
-    #[br(map = |x: u8| TyreVisual::try_from(x).unwrap_or(TyreVisual::Unknown))]
     pub tyres_visual: TyreVisual,
     pub tyres_ages_lap: u8,
     pub tyres_damage: WheelValue<u8>,
@@ -1000,7 +1029,7 @@ pub enum DRSActivationDistance {
     Distance(u16),
 }
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum TyreCompound {
     Inter = 7,
@@ -1020,7 +1049,9 @@ pub enum TyreCompound {
     Unknown,
 }
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+binread_enum!(TyreCompound, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum TyreVisual {
     Inter = 7,
@@ -1031,14 +1062,9 @@ pub enum TyreVisual {
     Unknown = 255,
 }
 
-#[derive(Debug, Default, BinRead)]
-pub struct WingValue<T: binread::BinRead<Args = ()>> {
-    pub front_left: T,
-    pub front_rigth: T,
-    pub rear: T,
-}
+binread_enum!(TyreVisual, u8);
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(i8)]
 pub enum FiaFlag {
     Unknown = -1,
@@ -1071,6 +1097,35 @@ pub enum ERSDeployMode {
 #[derive(Debug, BinRead)]
 pub struct FinalClassification {
     pub header: Header,
+    pub number_of_cars: u8,
+    #[br(count = 22)]
+    pub final_classification_data: Vec<FinalClassificationData>,
+}
+
+player_data!(
+    FinalClassification,
+    FinalClassificationData,
+    final_classification_data
+);
+
+#[derive(Debug, Default, BinRead)]
+pub struct FinalClassificationData {
+    pub position: u8,
+    pub number_of_laps: u8,
+    pub grid_position: u8,
+    pub points: u8,
+    pub number_of_pit_stops: u8,
+    #[br(map = |x: u8| ResultStatus::try_from(x).unwrap())]
+    pub result_status: ResultStatus,
+    pub best_lap_time: f32,
+    pub total_race_time: f64,
+    pub penalties_time: u8,
+    pub number_of_penalties: u8,
+    pub number_of_tyre_stints: u8,
+    #[br(count = 8)]
+    pub tyre_stints_actual: Vec<TyreCompound>,
+    #[br(count = 8)]
+    pub tyre_stints_visual: Vec<TyreVisual>,
 }
 
 #[derive(Debug, BinRead)]

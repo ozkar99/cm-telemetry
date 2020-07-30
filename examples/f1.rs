@@ -49,7 +49,10 @@ fn main() {
                 "CarStatus packet received: {:?}",
                 data.player_data().drs_activation_distance
             ),
-            // F1_2020::FinalClassification(_) => println!("FinalClassification packet received"),
+            F1_2020::FinalClassification(data) => println!(
+                "FinalClassification packet received: {:?}",
+                data.player_data()
+            ),
             // F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
             _ => (),
         }
