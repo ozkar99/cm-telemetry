@@ -133,17 +133,13 @@ pub struct CarMotionData {
 #[derive(Debug, BinRead)]
 pub struct Session {
     pub header: Header,
-    #[br(map = |x: u8| Weather::try_from(x).unwrap())]
     pub weather: Weather,
     pub track_temperature: i8,
     pub air_temperature: i8,
     pub total_laps: i8,
     pub track_length: i16,
-    #[br(map = |x: u8| SessionType::try_from(x).unwrap())]
     pub session_type: SessionType,
-    #[br(map = |x: i8| Track::try_from(x).unwrap())]
     pub track: Track,
-    #[br(map = |x: u8| Formula::try_from(x).unwrap())]
     pub formula: Formula,
     pub session_time_left: u16,
     pub session_duration: u16,
@@ -154,7 +150,6 @@ pub struct Session {
     pub sli_pro_native_support: u8,
     pub number_of_marshal_zones: u8,
     pub marshal_zones: [MarshalZone; 21],
-    #[br(map = |x: u8| SafetyCarStatus::try_from(x).unwrap())]
     pub safety_car_status: SafetyCarStatus,
     #[br(map = |x: u8| x > 0)]
     pub network_game: bool,
@@ -173,7 +168,7 @@ impl Session {
     }
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Weather {
     Clear,
@@ -182,9 +177,12 @@ pub enum Weather {
     LightRain,
     HeavyRain,
     Storm,
+    Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Weather, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(i8)]
 pub enum Track {
     Unknown = -1,
@@ -217,31 +215,38 @@ pub enum Track {
     Zandvoort,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Track, i8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Formula {
     F1Modern,
     F1Classic,
     F2,
     F1Generic,
+    Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Formula, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum SafetyCarStatus {
     NoSafetyCar,
     FullSafetyCar,
     VirtualSafetyCar,
+    Unknown = 255,
 }
+
+binread_enum!(SafetyCarStatus, u8);
 
 #[derive(Debug, Default, BinRead)]
 pub struct MarshalZone {
     pub zone_start: f32,
-    #[br(map = |x: i8| ZoneFlag::try_from(x).unwrap())]
     pub zone_flag: ZoneFlag,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(i8)]
 pub enum ZoneFlag {
     Unknown = -1,
@@ -252,18 +257,18 @@ pub enum ZoneFlag {
     Red,
 }
 
+binread_enum!(ZoneFlag, i8);
+
 #[derive(Debug, Default, BinRead)]
 pub struct WeatherForecastSample {
-    #[br(map = |x: u8| SessionType::try_from(x).unwrap())]
     pub session_type: SessionType,
     pub time_offset: u8,
-    #[br(map = |x: u8| Weather::try_from(x).unwrap())]
     pub weather: Weather,
     pub track_temperature: i8,
     pub air_temperature: i8,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum SessionType {
     Unknown,
@@ -280,6 +285,8 @@ pub enum SessionType {
     Formula2Race,
     TimeTrial,
 }
+
+binread_enum!(SessionType, u8);
 
 #[derive(Debug, BinRead)]
 pub struct LapData {
@@ -308,17 +315,13 @@ pub struct Lap {
     pub safety_car_delta: f32,
     pub car_position: u8,
     pub current_lap_number: u8,
-    #[br(map = |x: u8| PitStatus::try_from(x).unwrap())]
     pub pit_status: PitStatus,
-    #[br(map = |x: u8| Sector::try_from(x).unwrap())]
     pub sector: Sector,
     #[br(map = |x: u8| x > 0)]
     pub current_lap_invalid: bool,
     pub penalties: u8,
     pub grid_position: u8,
-    #[br(map = |x: u8| DriverStatus::try_from(x).unwrap())]
     pub driver_status: DriverStatus,
-    #[br(map = |x: u8| ResultStatus::try_from(x).unwrap())]
     pub result_status: ResultStatus,
 }
 
@@ -335,23 +338,29 @@ pub struct BestOverallSectorTime {
     pub lap_number: u8,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum PitStatus {
     None,
     Pitting,
     InPitArea,
+    Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(PitStatus, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Sector {
     Sector1,
     Sector2,
     Sector3,
+    Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Sector, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum DriverStatus {
     InGarage,
@@ -359,9 +368,12 @@ pub enum DriverStatus {
     InLap,
     OutLap,
     InTrack,
+    Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(DriverStatus, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum ResultStatus {
     Invalid,
@@ -372,7 +384,10 @@ pub enum ResultStatus {
     NotClassified,
     Retired,
     MechanicalFailure,
+    Unknown = 255,
 }
+
+binread_enum!(ResultStatus, u8);
 
 #[derive(Debug)]
 pub struct Event {
@@ -455,9 +470,7 @@ pub enum EventDataDetail {
 
 #[derive(Debug, Default, BinRead)]
 pub struct PenaltyEventDetail {
-    #[br(map = |x: u8| PenaltyType::try_from(x).unwrap())]
     pub penalty_type: PenaltyType,
-    #[br(map = |x: u8| InfringementType::try_from(x).unwrap())]
     pub infrigement_type: InfringementType,
     pub vehicle_index: u8,
     pub other_vehicle_index: u8,
@@ -487,7 +500,10 @@ pub enum PenaltyType {
     ThisAndPreviousLapInvalidatedWithNoReason,
     Retired,
     BlackFlagTimer,
+    Unknown = 255,
 }
+
+binread_enum!(PenaltyType, u8);
 
 #[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
@@ -544,7 +560,10 @@ pub enum InfringementType {
     RetryPenalty,
     IllegalTimeGain,
     MandatoryPitstop,
+    Unknown = 255,
 }
+
+binread_enum!(InfringementType, u8);
 
 #[derive(Debug, BinRead)]
 pub struct Participants {
@@ -717,7 +736,7 @@ pub enum Team {
     Williams2003,
     Brawn2009,
     Lotus1978,
-    F1Genericcar,
+    F1GenericCar,
     ArtGP19,
     Campos19,
     Carlin19,
@@ -869,9 +888,7 @@ pub struct CarTelemetry {
     #[br(count = 22)]
     pub car_telemetry_data: Vec<CarTelemetryData>,
     pub button_status: u32,
-    #[br(map = |x: u8| MFDPanel::try_from(x).unwrap_or(MFDPanel::Unknown))]
     pub mfd_panel: MFDPanel,
-    #[br(map = |x: u8| MFDPanel::try_from(x).unwrap_or(MFDPanel::Unknown))]
     pub mfd_panel_secondary_player: MFDPanel,
     #[br(map = |x: i8| if x == 0 { Gear::Unknown } else { Gear::try_from(x).unwrap() })]
     pub suggested_gear: Gear,
@@ -917,7 +934,7 @@ fn surface_type_parser<R: binread::io::Read + binread::io::Seek>(
     })
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(i8)]
 pub enum Gear {
     Reverse = -1,
@@ -933,7 +950,9 @@ pub enum Gear {
     Unknown = 127,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Gear, i8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Surface {
     Tarmac,
@@ -951,7 +970,9 @@ pub enum Surface {
     Unknown = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Surface, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum MFDPanel {
     CarSetup,
@@ -962,6 +983,8 @@ pub enum MFDPanel {
     Unknown,
     Closed = 255,
 }
+
+binread_enum!(MFDPanel, u8);
 
 #[derive(Debug, BinRead)]
 pub struct CarStatus {
@@ -977,7 +1000,6 @@ pub struct CarStatusData {
     pub traction_control: u8,
     #[br(map = |x: u8| x > 0)]
     pub anti_lock_brakes: bool,
-    #[br(map = |x: u8| FuelMix::try_from(x).unwrap_or(FuelMix::Unknown))]
     pub fuel_mix: FuelMix,
     pub front_brake_bias: u8,
     #[br(map = |x: u8| x > 0)]
@@ -988,7 +1010,6 @@ pub struct CarStatusData {
     pub max_rpm: u16,
     pub idle_rpm: u16,
     pub max_gears: u8,
-    #[br(map = |x: u8| DRSAllowed::try_from(x).unwrap_or(DRSAllowed::Unknown))]
     pub drs_allowed: DRSAllowed,
     #[br(map = |x: u16| if x > 0 { DRSActivationDistance::Distance(x) } else { DRSActivationDistance::NotAvailable })]
     pub drs_activation_distance: DRSActivationDistance,
@@ -1002,12 +1023,11 @@ pub struct CarStatusData {
     pub drs_fault: bool,
     pub engine_damage: u8,
     pub gearbox_damage: u8,
-    #[br(map = |x: i8| FiaFlag::try_from(x).unwrap_or(FiaFlag::Unknown))]
     pub vehicle_fia_flag: FiaFlag,
     pub ers_data: ERS,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum FuelMix {
     Lean,
@@ -1017,7 +1037,9 @@ pub enum FuelMix {
     Unknown,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(FuelMix, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum DRSAllowed {
     NotAllowed,
@@ -1025,7 +1047,9 @@ pub enum DRSAllowed {
     Unknown,
 }
 
-#[derive(Debug, BinRead, EnumDefault)]
+binread_enum!(DRSAllowed, u8);
+
+#[derive(Debug, EnumDefault)]
 #[repr(u16)]
 pub enum DRSActivationDistance {
     NotAvailable,
@@ -1078,24 +1102,28 @@ pub enum FiaFlag {
     Red,
 }
 
+binread_enum!(FiaFlag, i8);
+
 #[derive(Debug, Default, BinRead)]
 pub struct ERS {
     pub stored_energy: f32,
-    #[br(map = |x: u8| ERSDeployMode::try_from(x).unwrap())]
     pub deploy_mode: ERSDeployMode,
     pub harvested_this_lap_mguk: f32,
     pub harvested_this_lap_mguh: f32,
     pub deployed_this_lap: f32,
 }
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum ERSDeployMode {
     None,
     Medium,
     Overtake,
     Hotlap,
+    Unknown = 255,
 }
+
+binread_enum!(ERSDeployMode, u8);
 
 #[derive(Debug, BinRead)]
 pub struct FinalClassification {
@@ -1118,7 +1146,6 @@ pub struct FinalClassificationData {
     pub grid_position: u8,
     pub points: u8,
     pub number_of_pit_stops: u8,
-    #[br(map = |x: u8| ResultStatus::try_from(x).unwrap())]
     pub result_status: ResultStatus,
     pub best_lap_time: f32,
     pub total_race_time: f64,
@@ -1138,6 +1165,8 @@ pub struct LobbyInfo {
     #[br(count = 22)]
     pub lobby_players: Vec<LobbyInfoData>,
 }
+
+player_data!(LobbyInfo, LobbyInfoData, lobby_players);
 
 impl LobbyInfo {
     pub fn players(self) -> Vec<LobbyInfoData> {
