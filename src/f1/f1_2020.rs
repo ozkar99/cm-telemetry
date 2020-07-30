@@ -560,12 +560,9 @@ player_data!(Participants, ParticipantsData, participants_data);
 pub struct ParticipantsData {
     #[br(map = |x: u8| x > 0)]
     pub ai_controlled: bool,
-    #[br(map = |x: u8| Driver::try_from(x).unwrap_or(Driver::Unknown))]
     pub driver: Driver,
-    #[br(map = |x: u8| Team::try_from(x).unwrap_or(Team::Unknown))]
     pub team: Team,
     pub race_number: u8,
-    #[br(map = |x: u8| Nationality::try_from(x).unwrap_or(Nationality::Unknown))]
     pub nationality: Nationality,
     #[br(parse_with = participant_name_parser)]
     pub name: String,
@@ -588,7 +585,7 @@ fn participant_name_parser<R: binread::io::Read + binread::io::Seek>(
     Ok(String::from(driver_name))
 }
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Driver {
     CarlosSainz,
@@ -674,7 +671,9 @@ pub enum Driver {
     Unknown = 255, // Used for time trial "ghost" drivers that appear randomly
 }
 
-#[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
+binread_enum!(Driver, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Team {
     Mercedes,
@@ -740,7 +739,9 @@ pub enum Team {
     MyTeam = 255,
 }
 
-#[derive(Debug, BinRead, TryFromPrimitive, EnumDefault)]
+binread_enum!(Team, u8);
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
 #[repr(u8)]
 pub enum Nationality {
     Unknown,
@@ -833,6 +834,8 @@ pub enum Nationality {
     Barbadian,
     Vietnamese,
 }
+
+binread_enum!(Nationality, u8);
 
 #[derive(Debug, BinRead)]
 pub struct CarSetup {
@@ -1131,7 +1134,42 @@ pub struct FinalClassificationData {
 #[derive(Debug, BinRead)]
 pub struct LobbyInfo {
     pub header: Header,
+    pub number_of_players: u8,
+    #[br(count = 22)]
+    pub lobby_players: Vec<LobbyInfoData>,
 }
+
+impl LobbyInfo {
+    pub fn players(self) -> Vec<LobbyInfoData> {
+        let number_of_players = self.number_of_players as usize;
+        self.lobby_players
+            .into_iter()
+            .take(number_of_players)
+            .collect()
+    }
+}
+
+#[derive(Debug, Default, BinRead)]
+pub struct LobbyInfoData {
+    #[br(map = |x: u8| x > 0)]
+    pub ai_controlled: bool,
+    pub team: Team,
+    pub nationality: Nationality,
+    #[br(parse_with = participant_name_parser)]
+    pub name: String,
+    pub status: LobbyStatus,
+}
+
+#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[repr(u8)]
+pub enum LobbyStatus {
+    NotReady,
+    Ready,
+    Spectating,
+    Unknown,
+}
+
+binread_enum!(LobbyStatus, u8);
 
 impl TelemetryEvent for F1_2020 {
     fn from_packet(packet: &TelemetryPacket) -> Result<F1_2020, Box<dyn Error>> {

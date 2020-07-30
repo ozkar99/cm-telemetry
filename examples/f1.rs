@@ -53,8 +53,7 @@ fn main() {
                 "FinalClassification packet received: {:?}",
                 data.player_data()
             ),
-            // F1_2020::LobbyInfo(_) => println!("LobbyInfo packet received"),
-            _ => (),
+            F1_2020::LobbyInfo(data) => println!("LobbyInfo packet received: {:?}", data.players()),
         }
     }
 }
