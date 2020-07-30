@@ -38,6 +38,19 @@ pub struct Header {
     pub secondary_player_car_index: u8,
 }
 
+/// player_data implements the "player_data()" function
+/// for the given impl_type, return_type and data_field
+macro_rules! player_data {
+    ($impl_type:ident, $return_type:ident, $data_field:ident) => {
+        impl $impl_type {
+            pub fn player_data(&self) -> &$return_type {
+                let player_index = self.header.player_car_index as usize;
+                &self.$data_field[player_index]
+            }
+        }
+    };
+}
+
 #[derive(Debug, Default, BinRead)]
 pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
     pub x: T,
@@ -75,13 +88,7 @@ pub struct Motion {
     pub front_wheel_angle: f32,
 }
 
-impl Motion {
-    /// player_data returns the CarMotionData asociated with the player
-    pub fn player_data(&self) -> &CarMotionData {
-        let player_index = self.header.player_car_index as usize;
-        &self.car_motion_data[player_index]
-    }
-}
+player_data!(Motion, CarMotionData, car_motion_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarMotionData {
@@ -255,6 +262,8 @@ pub struct LapData {
     pub laps: Vec<Lap>,
 }
 
+player_data!(LapData, Lap, laps);
+
 #[derive(Debug, Default, BinRead)]
 pub struct Lap {
     pub last_lap_time: f32,
@@ -285,14 +294,6 @@ pub struct Lap {
     pub driver_status: DriverStatus,
     #[br(map = |x: u8| ResultStatus::try_from(x).unwrap())]
     pub result_status: ResultStatus,
-}
-
-impl LapData {
-    /// player_data returns the Lap asociated with the player
-    pub fn player_data(&self) -> &Lap {
-        let player_index = self.header.player_car_index as usize;
-        &self.laps[player_index]
-    }
 }
 
 #[derive(Debug, Default, BinRead)]
@@ -526,6 +527,8 @@ pub struct Participants {
     pub participants_data: Vec<ParticipantsData>,
 }
 
+player_data!(Participants, ParticipantsData, participants_data);
+
 #[derive(Debug, Default, BinRead)]
 pub struct ParticipantsData {
     #[br(map = |x: u8| x > 0)]
@@ -556,13 +559,6 @@ fn participant_name_parser<R: binread::io::Read + binread::io::Seek>(
         .trim_matches(char::from(0)); // trim any additional null-bytes
 
     Ok(String::from(driver_name))
-}
-
-impl Participants {
-    pub fn player_data(&self) -> &ParticipantsData {
-        let player_idx = self.header.player_car_index as usize;
-        &self.participants_data[player_idx]
-    }
 }
 
 #[derive(Debug, TryFromPrimitive, BinRead, EnumDefault)]
@@ -831,12 +827,7 @@ pub struct CarSetupData {
     pub fuel_load: f32,
 }
 
-impl CarSetup {
-    pub fn player_data(&self) -> &CarSetupData {
-        let player_idx = self.header.player_car_index as usize;
-        &self.car_setup_data[player_idx]
-    }
-}
+player_data!(CarSetup, CarSetupData, car_setup_data);
 
 #[derive(Debug, BinRead)]
 pub struct CarTelemetry {
@@ -852,12 +843,7 @@ pub struct CarTelemetry {
     pub suggested_gear: Gear,
 }
 
-impl CarTelemetry {
-    pub fn player_data(&self) -> &CarTelemetryData {
-        let player_index = self.header.player_car_index as usize;
-        &self.car_telemetry_data[player_index]
-    }
-}
+player_data!(CarTelemetry, CarTelemetryData, car_telemetry_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarTelemetryData {
@@ -877,7 +863,7 @@ pub struct CarTelemetryData {
     pub tyres_inner_temp: WheelValue<u8>,
     pub engine_temp: u16,
     pub tyres_pressure: WheelValue<f32>,
-    #[br(parse_with = surface_type_parser )]
+    #[br(parse_with = surface_type_parser)]
     pub surface_type: WheelValue<Surface>,
 }
 
@@ -946,6 +932,15 @@ pub enum MFDPanel {
 #[derive(Debug, BinRead)]
 pub struct CarStatus {
     pub header: Header,
+    #[br(count = 22)]
+    pub car_status_data: Vec<CarStatusData>,
+}
+
+player_data!(CarStatus, CarStatusData, car_status_data);
+
+#[derive(Debug, Default, BinRead)]
+pub struct CarStatusData {
+
 }
 
 #[derive(Debug, BinRead)]
