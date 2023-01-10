@@ -70,6 +70,8 @@ pub struct Motion {
     pub front_wheel_angle: f32,                     // Current front wheels angle in radians
 }
 
+player_data!(Motion, CarMotionData, car_motion_data);
+
 #[derive(Debug, Default, BinRead)]
 pub struct CarMotionData {
     pub world_position: Coordinates<f32>,       // World space position
@@ -412,6 +414,8 @@ pub struct LapData {
     pub	time_trial_pb_car_idx: u8,      // Index of Personal Best car in time trial (255 if invalid)
     pub	time_trial_rival_car_idx: u8,   // Index of Rival car in time trial (255 if invalid)
 }
+
+player_data!(LapData, Lap, laps);
 
 #[derive(Debug, Default, BinRead)]
 pub struct Lap {
@@ -780,6 +784,8 @@ pub struct Participants {
     pub participants_data: Vec<ParticipantsData>,
 }
 
+player_data!(Participants, ParticipantsData, participants_data);
+
 #[derive(Debug, Default, BinRead)]
 pub struct ParticipantsData {
     #[br(map = |x: u8| x > 0)]
@@ -1111,6 +1117,8 @@ pub struct CarSetup {
     pub car_setup_data: Vec<CarSetupData>,
 }
 
+player_data!(CarSetup, CarSetupData, car_setup_data);
+
 #[derive(Debug, Default, BinRead)]
 pub struct CarSetupData {
     pub wing: FrontRearValue<u8>,               // Wing aero
@@ -1143,6 +1151,8 @@ pub struct CarTelemetry {
     pub suggested_gear: Gear,                                                               // Suggested gear for the player (1-8)
                                                                                             // 0 if no gear suggested
 }
+
+player_data!(CarTelemetry, CarTelemetryData, car_telemetry_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarTelemetryData {
@@ -1244,6 +1254,8 @@ pub struct CarStatus {
     #[br(count = 22)]
     pub car_status_data: Vec<CarStatusData>,
 }
+
+player_data!(CarStatus, CarStatusData, car_status_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarStatusData {
@@ -1387,6 +1399,8 @@ pub struct FinalClassification {
     pub final_classification_data: Vec<FinalClassificationData>,
 }
 
+player_data!(FinalClassification, FinalClassificationData, final_classification_data);
+
 #[derive(Debug, Default, BinRead)]
 pub struct FinalClassificationData {
     pub position: u8,                           // Finishing position
@@ -1418,6 +1432,8 @@ pub struct LobbyInfo {
     #[br(count = 22)]
     pub lobby_players: Vec<LobbyInfoData>,
 }
+
+player_data!(LobbyInfo, LobbyInfoData, lobby_players);
 
 impl LobbyInfo {
     pub fn players(self) -> Vec<LobbyInfoData> {
@@ -1460,6 +1476,8 @@ pub struct CarDamage {
     #[br(count = 22)]
     pub car_damage_data: Vec<CarDamageData>,
 }
+
+player_data!(CarDamage, CarDamageData, car_damage_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarDamageData
