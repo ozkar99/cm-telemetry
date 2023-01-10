@@ -2,11 +2,15 @@ use std::convert::TryFrom;
 use std::error::Error;
 use std::io::Cursor;
 
-use crate::{TelemetryEvent, TelemetryPacket};
+use crate::{
+    TelemetryEvent,
+    TelemetryPacket,
+    f1::util::*,
+    f1::macros::*,
+};
 
 use binread::{BinRead, BinReaderExt};
 use enum_default::EnumDefault;
-use num::Num;
 use num_enum::TryFromPrimitive;
 use bitflags::bitflags;
 
@@ -46,25 +50,6 @@ pub struct Header
                                         // 255 if no second player
 }
 
-/// binread_enum implements a default BinRead trait for enums
-/// arguments are the enum to implement and the size of it
-/// note: enum has to have an "Unknown" element and implement TryFromPrimitive trait
-macro_rules! binread_enum {
-    ($type:ident, $repr:ident) => {
-        impl binread::BinRead for $type {
-            type Args = ();
-            fn read_options<R: binread::io::Read + binread::io::Seek>(
-                reader: &mut R,
-                options: &binread::ReadOptions,
-                args: Self::Args,
-            ) -> binread::BinResult<Self> {
-                let byte = $repr::read_options(reader, options, args)?;
-                Ok($type::try_from(byte).unwrap_or($type::Unknown))
-            }
-        }
-    };
-}
-
 // MOTION
 #[derive(Debug, BinRead)]
 pub struct Motion {
@@ -97,21 +82,6 @@ pub struct CarMotionData {
     pub yaw: f32,                               // Yaw angle in radians
     pub pitch: f32,                             // Pitch angle in radians
     pub roll: f32,                              // Roll angle in radians
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct WheelValue<T: binread::BinRead<Args = ()>> {
-    pub rear_left: T,
-    pub rear_right: T,
-    pub front_left: T,
-    pub front_right: T,
 }
 
 // SESSION
@@ -1156,12 +1126,6 @@ pub struct CarSetupData {
     pub type_pressure: WheelValue<f32>,         // Tyre pressure (PSI)
     pub ballast: u8,                            // Ballast
     pub fuel_load: f32,                         // Fuel load
-}    
-
-#[derive(Debug, Default, BinRead)]
-pub struct FrontRearValue<T: Num + binread::BinRead<Args = ()>> {
-    pub front: T,
-    pub rear: T,
 }
 
 // CAR TELEMETRY
@@ -1523,13 +1487,6 @@ pub struct CarDamageData
     pub engine_blown: bool, // Engine blown, 0 = OK, 1 = fault
     #[br(map = |x: u8| x > 0)]
     pub engine_seized: bool, // Engine seized, 0 = OK, 1 = fault
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct WingValue<T: binread::BinRead<Args = ()>> {
-    pub front_left: T,
-    pub front_right: T,
-    pub rear: T,
 }
 
 // SESSION HISTORY
