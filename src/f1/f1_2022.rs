@@ -605,7 +605,7 @@ impl binread::BinRead for Event {
                 EventDataDetail::Flashback(flashback_frame_identifier, flashback_session_time)
             }
             "BUTN" => {
-                let button_status = <u32>::read_options(reader, options, args)?;
+                let button_status = ButtonFlags::from_bits(<u32>::read_options(reader, options, args)?).unwrap_or_default();
                 EventDataDetail::ButtonStatus(button_status)
             }
             _ => EventDataDetail::Unknown,
@@ -638,9 +638,52 @@ pub enum EventDataDetail {
     StopGoServed(u8),           // vehicleIdx; Vehicle index of the vehicle serving stop go
     Flashback(u32, f32),        // flashbackFrameIdentifier; Frame identifier flashed back to
                                 // flashbackSessionTime; Session time flashed back to
-    ButtonStatus(u32),          //m_buttonStatus; Bit flags specifying which buttons are being pressed
+    ButtonStatus(ButtonFlags),  // buttonStatus; Bit flags specifying which buttons are being pressed
                                 // currently - see appendices
     Unknown,                    // not part of the spec, added to satisfy match
+}
+
+bitflags! {
+    pub struct ButtonFlags: u32 {
+        const CROSS_OR_A        = 0x00000001;
+        const TRIANGLE_OR_Y     = 0x00000002;
+        const CIRCLE_OR_B       = 0x00000004;
+        const SQUARE_OR_X       = 0x00000008;
+        const D_PAD_LEFT        = 0x00000010;
+        const D_PAD_RIGHT       = 0x00000020;
+        const D_PAD_UP          = 0x00000040;
+        const D_PAD_DOWN        = 0x00000080;
+        const OPTIONS_OR_MENU   = 0x00000100;
+        const L1_OR_LB          = 0x00000200;
+        const R1_OR_RB          = 0x00000400;
+        const L2_OR_LT          = 0x00000800;
+        const R2_OR_RT          = 0x00001000;
+        const LEFT_STICK_CLICK  = 0x00002000;
+        const RIGHT_STICK_CLICK = 0x00004000;
+        const RIGHT_STICK_LEFT  = 0x00008000;
+        const RIGHT_STICK_RIGHT = 0x00010000;
+        const RIGHT_STICK_UP    = 0x00020000;
+        const RIGHT_STICK_DOWN  = 0x00040000;
+        const SPECIAL           = 0x00080000;
+        const UDP_ACTION_1      = 0x00100000;
+        const UDP_ACTION_2      = 0x00200000;
+        const UDP_ACTION_3      = 0x00400000;
+        const UDP_ACTION_4      = 0x00800000;
+        const UDP_ACTION_5      = 0x01000000;
+        const UDP_ACTION_6      = 0x02000000;
+        const UDP_ACTION_7      = 0x04000000;
+        const UDP_ACTION_8      = 0x08000000;
+        const UDP_ACTION_9      = 0x10000000;
+        const UDP_ACTION_10     = 0x20000000;
+        const UDP_ACTION_11     = 0x40000000;
+        const UDP_ACTION_12     = 0x80000000;
+    }
+}
+
+impl Default for ButtonFlags {
+    fn default() -> Self {
+        ButtonFlags::empty()
+    }
 }
 
 #[derive(Debug, Default, BinRead)]
@@ -1520,10 +1563,10 @@ pub struct LapHistoryData
 
 bitflags! {
     pub struct LapValidFlags: u8 {
-        const LAP_VALID = 0x01;
-        const SECTOR1_VALID = 0x02;
-        const SECTOR2_VALID = 0x04;
-        const SECTOR3_VALID = 0x08;
+        const LAP_VALID         = 0x01;
+        const SECTOR_1_VALID    = 0x02;
+        const SECTOR_2_VALID    = 0x04;
+        const SECTOR_3_VALID    = 0x08;
     }
 }
 
@@ -1541,7 +1584,7 @@ fn lap_valid_flags_aprser<R: binread::io::Read + binread::io::Seek>(
     let mut bytes: [u8; 1] = [0; 1];
     reader.read_exact(&mut bytes)?;
 
-    Ok(LapValidFlags::from_bits(bytes[0]).unwrap_or(LapValidFlags::empty()))
+    Ok(LapValidFlags::from_bits(bytes[0]).unwrap_or_default())
 }
 
 #[derive(Debug, Default, BinRead)]
