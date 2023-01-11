@@ -7,7 +7,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(addr: &'static str) -> Result<Server, std::io::Error> {
+    pub fn new(addr: &str) -> Result<Server, std::io::Error> {
         match UdpSocket::bind(addr) {
             Ok(udp_server) => Ok(Server { srv: udp_server }),
             Err(e) => Err(e),
