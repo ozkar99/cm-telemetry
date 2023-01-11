@@ -112,7 +112,7 @@ pub struct Session {
     pub sli_pro_native_support: u8,                             // SLI Pro support, 0 = inactive, 1 = active
     pub number_of_marshal_zones: u8,                            // Number of marshal zones to follow
     #[br(count = 21)]
-    pub marshal_zones: Vec<MarshalZone>,                       // List of marshal zones – max 21
+    pub marshal_zones: Vec<MarshalZone>,                        // List of marshal zones – max 21
     pub safety_car_status: SafetyCarStatus,                     // 0 = no safety car, 1 = full
                                                                 // 2 = virtual, 3 = formation lap
     #[br(map = |x: u8| x > 0)]
@@ -948,7 +948,9 @@ pub enum Driver {
     JackDoohan,
     AmauryCordeel,
     MikaHakkinen,
-    Unknown = 255, // Used for time trial "ghost" drivers that appear randomly
+
+    Unknown,
+    Human = 255, // Used for time trial "ghost" drivers that appear randomly
 }
 
 binread_enum!(Driver, u8);
@@ -1127,7 +1129,7 @@ pub struct CarSetupData {
     pub camber: FrontRearValue<f32>,            // Camber angle (suspension geometry)
     pub toe: FrontRearValue<f32>,               // Toe angle (suspension geometry)
     pub suspension: FrontRearValue<u8>,         // Suspension
-    pub anti_roll_bar: FrontRearValue<u8>,      //Anti-roll bar
+    pub anti_roll_bar: FrontRearValue<u8>,      // Anti-roll bar
     pub suspension_height: FrontRearValue<u8>,  // Ride height
     pub brake_pressure: u8,                     // Brake pressure (percentage)
     pub brake_bias: u8,                         // Brake bias (percentage)
@@ -1156,25 +1158,25 @@ player_data!(CarTelemetry, CarTelemetryData, car_telemetry_data);
 
 #[derive(Debug, Default, BinRead)]
 pub struct CarTelemetryData {
-    pub speed: u16, // Speed of car in kilometres per hour
-    pub throttle: f32, // Amount of throttle applied (0.0 to 1.0)
-    pub steer: f32, // Steering (-1.0 (full lock left) to 1.0 (full lock right))
-    pub brake: f32, // Amount of brake applied (0.0 to 1.0)
-    pub clutch: u8, // Amount of clutch applied (0 to 100)
+    pub speed: u16,                                 // Speed of car in kilometres per hour
+    pub throttle: f32,                              // Amount of throttle applied (0.0 to 1.0)
+    pub steer: f32,                                 // Steering (-1.0 (full lock left) to 1.0 (full lock right))
+    pub brake: f32,                                 // Amount of brake applied (0.0 to 1.0)
+    pub clutch: u8,                                 // Amount of clutch applied (0 to 100)
     #[br(map = |x: i8| Gear::try_from(x).unwrap())]
-    pub gear: Gear, // Gear selected (1-8, N=0, R=-1)
-    pub engine_rpm: u16, // Engine RPM
+    pub gear: Gear,                                 // Gear selected (1-8, N=0, R=-1)
+    pub engine_rpm: u16,                            // Engine RPM
     #[br(map = |x: u8| x > 0)]
-    pub drs: bool, // 0 = off, 1 = on
-    pub rev_lights_percent: u8, // Rev lights indicator (percentage)
-    pub rev_lights_bit_value: u16, // Rev lights (bit 0 = leftmost LED, bit 14 = rightmost LED)
-    pub brake_temp: WheelValue<u16>, // Brakes temperature (celsius)
-    pub tyres_surface_temp: WheelValue<u8>, // Tyres surface temperature (celsius)
-    pub tyres_inner_temp: WheelValue<u8>, // Tyres inner temperature (celsius)
-    pub engine_temp: u16, // Engine temperature (celsius)
-    pub tyres_pressure: WheelValue<f32>, // Tyres pressure (PSI)
+    pub drs: bool,                                  // 0 = off, 1 = on
+    pub rev_lights_percent: u8,                     // Rev lights indicator (percentage)
+    pub rev_lights_bit_value: u16,                  // Rev lights (bit 0 = leftmost LED, bit 14 = rightmost LED)
+    pub brake_temp: WheelValue<u16>,                // Brakes temperature (celsius)
+    pub tyres_surface_temp: WheelValue<u8>,         // Tyres surface temperature (celsius)
+    pub tyres_inner_temp: WheelValue<u8>,           // Tyres inner temperature (celsius)
+    pub engine_temp: u16,                           // Engine temperature (celsius)
+    pub tyres_pressure: WheelValue<f32>,            // Tyres pressure (PSI)
     #[br(parse_with = surface_type_parser)]
-    pub surface_type: WheelValue<Surface>, // Driving surface, see appendices
+    pub surface_type: WheelValue<Surface>,          // Driving surface, see appendices
 }
 
 #[derive(Debug, TryFromPrimitive, EnumDefault)]
@@ -1428,7 +1430,7 @@ pub struct FinalClassificationData {
 #[derive(Debug, BinRead)]
 pub struct LobbyInfo {
     pub header: Header,
-    pub number_of_players: u8,      // Number of players in the lobby data
+    pub number_of_players: u8,                  // Number of players in the lobby data
     #[br(count = 22)]
     pub lobby_players: Vec<LobbyInfoData>,
 }
@@ -1454,7 +1456,7 @@ pub struct LobbyInfoData {
     #[br(parse_with = participant_name_parser)]
     pub name: String,                           // Name of participant in UTF-8 format – null terminated
                                                 // Will be truncated with ... (U+2026) if too long
-    pub car_number: u8,                        // Car number of the player
+    pub car_number: u8,                         // Car number of the player
     pub status: LobbyStatus,                    // 0 = not ready, 1 = ready, 2 = spectating
 }      
 
@@ -1482,45 +1484,45 @@ player_data!(CarDamage, CarDamageData, car_damage_data);
 #[derive(Debug, Default, BinRead)]
 pub struct CarDamageData
 {
-    pub tyres_wear: WheelValue<u8>, // Tyre wear (percentage)
-    pub tyres_damage: WheelValue<u8>, // Tyre damage (percentage)
-    pub brakes_damage: WheelValue<u8>, // Brakes damage (percentage)
-    pub wing_damage: WingValue<u8>, // Wing damage (percentage)
-    pub floor_damage: u8, // Floor damage (percentage)
-    pub diffuser_damage: u8, // Diffuser damage (percentage)
-    pub sidepod_damage: u8, // Sidepod damage (percentage)
+    pub tyres_wear: WheelValue<u8>,     // Tyre wear (percentage)
+    pub tyres_damage: WheelValue<u8>,   // Tyre damage (percentage)
+    pub brakes_damage: WheelValue<u8>,  // Brakes damage (percentage)
+    pub wing_damage: WingValue<u8>,     // Wing damage (percentage)
+    pub floor_damage: u8,               // Floor damage (percentage)
+    pub diffuser_damage: u8,            // Diffuser damage (percentage)
+    pub sidepod_damage: u8,             // Sidepod damage (percentage)
     #[br(map = |x: u8| x > 0)]
-    pub drs_fault: bool, // Indicator for DRS fault, 0 = OK, 1 = fault
+    pub drs_fault: bool,                // Indicator for DRS fault, 0 = OK, 1 = fault
     #[br(map = |x: u8| x > 0)]
-    pub ers_fault: bool, // Indicator for ERS fault, 0 = OK, 1 = fault
-    pub gear_box_damage: u8, // Gear box damage (percentage)
-    pub engine_damage: u8, // Engine damage (percentage)
-    pub engine_mguh_wear: u8, // Engine wear MGU-H (percentage)
-    pub engine_es_wear: u8, // Engine wear ES (percentage)
-    pub engine_ce_wear: u8, // Engine wear CE (percentage)
-    pub engine_ice_wear: u8, // Engine wear ICE (percentage)
-    pub engine_mguk_wear: u8, // Engine wear MGU-K (percentage)
-    pub engine_tc_wear: u8, // Engine wear TC (percentage)
+    pub ers_fault: bool,                // Indicator for ERS fault, 0 = OK, 1 = fault
+    pub gear_box_damage: u8,            // Gear box damage (percentage)
+    pub engine_damage: u8,              // Engine damage (percentage)
+    pub engine_mguh_wear: u8,           // Engine wear MGU-H (percentage)
+    pub engine_es_wear: u8,             // Engine wear ES (percentage)
+    pub engine_ce_wear: u8,             // Engine wear CE (percentage)
+    pub engine_ice_wear: u8,            // Engine wear ICE (percentage)
+    pub engine_mguk_wear: u8,           // Engine wear MGU-K (percentage)
+    pub engine_tc_wear: u8,             // Engine wear TC (percentage)
     #[br(map = |x: u8| x > 0)]
-    pub engine_blown: bool, // Engine blown, 0 = OK, 1 = fault
+    pub engine_blown: bool,             // Engine blown, 0 = OK, 1 = fault
     #[br(map = |x: u8| x > 0)]
-    pub engine_seized: bool, // Engine seized, 0 = OK, 1 = fault
+    pub engine_seized: bool,            // Engine seized, 0 = OK, 1 = fault
 }
 
 // SESSION HISTORY
 #[derive(Debug, BinRead)]
 pub struct SessionHistory
 {
-    pub header: Header,                                   // Header
-    pub car_index: u8,                                         // Index of the car this lap data relates to
-    pub num_laps: u8,                                        // Num laps in the data (including current partial lap)
-    pub num_tyre_stints: u8,                                  // Number of tyre stints in the data
+    pub header: Header,                                         // Header
+    pub car_index: u8,                                          // Index of the car this lap data relates to
+    pub num_laps: u8,                                           // Num laps in the data (including current partial lap)
+    pub num_tyre_stints: u8,                                    // Number of tyre stints in the data
     pub best_lap_time_lap_num: u8,                              // Lap the best lap time was achieved on
-    pub best_sector1_lap_num: u8,                              // Lap the best Sector 1 time was achieved on
-    pub best_sector2_lap_num: u8,                              // Lap the best Sector 2 time was achieved on
-    pub best_sector3_lap_num: u8,                              // Lap the best Sector 3 time was achieved on
+    pub best_sector1_lap_num: u8,                               // Lap the best Sector 1 time was achieved on
+    pub best_sector2_lap_num: u8,                               // Lap the best Sector 2 time was achieved on
+    pub best_sector3_lap_num: u8,                               // Lap the best Sector 3 time was achieved on
     #[br(count = 100)]
-    pub lap_history_data: Vec<LapHistoryData>,                // 100 laps of data max
+    pub lap_history_data: Vec<LapHistoryData>,                  // 100 laps of data max
     #[br(count = 8)]
     pub tyre_stints_history_data: Vec<TyreStintHistoryData>,
 }
