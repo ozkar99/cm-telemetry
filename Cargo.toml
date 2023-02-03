@@ -8,9 +8,21 @@ description = "Implementation of the telemetry UDP protocol for codemasters (and
 license = "MIT"
 edition = "2018"
 
+[features]
+default = []
+async = ["dep:tokio", "tokio?/net"]
+async_example = ["async", "tokio?/rt", "tokio?/macros", "tokio?/time"]
+
 [dependencies]
-num = "0.3"
+num = "0.4"
 num_enum = "0.5"
 enum_default = "0.2"
-binread = "1"
+binread = "2.2"
 byteorder = "1"
+
+cfg-if = "1.0.0"
+tokio = { version = "1.25.0", optional = true }
+
+[[example]]
+name = "async_f1_2020"
+required-features = ["async_example"]
