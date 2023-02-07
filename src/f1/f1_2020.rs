@@ -2,11 +2,15 @@ use std::convert::TryFrom;
 use std::error::Error;
 use std::io::Cursor;
 
-use crate::{TelemetryEvent, TelemetryPacket};
+use crate::{
+    TelemetryEvent,
+    TelemetryPacket,
+    f1::util::*,
+    f1::macros::*,
+};
 
 use binread::{BinRead, BinReaderExt};
 use enum_default::EnumDefault;
-use num::Num;
 use num_enum::TryFromPrimitive;
 
 /// F1_2020 implements the codemasters UDP telemetry protocol for "F1 2020"
@@ -36,66 +40,6 @@ pub struct Header {
     pub frame_identifier: u32,
     pub player_car_index: u8,
     pub secondary_player_car_index: u8,
-}
-
-/// player_data implements the "player_data()" function
-/// for the given impl_type, return_type and data_field
-macro_rules! player_data {
-    ($impl_type:ident, $return_type:ident, $data_field:ident) => {
-        impl $impl_type {
-            pub fn player_data(&self) -> &$return_type {
-                let player_index = self.header.player_car_index as usize;
-                &self.$data_field[player_index]
-            }
-        }
-    };
-}
-
-/// binread_enum implements a default BinRead trait for enums
-/// arguments are the enum to implement and the size of it
-/// note: enum has to have an "Unknown" element and implement TryFromPrimitive trait
-macro_rules! binread_enum {
-    ($type:ident, $repr:ident) => {
-        impl binread::BinRead for $type {
-            type Args = ();
-            fn read_options<R: binread::io::Read + binread::io::Seek>(
-                reader: &mut R,
-                options: &binread::ReadOptions,
-                args: Self::Args,
-            ) -> binread::BinResult<Self> {
-                let byte = $repr::read_options(reader, options, args)?;
-                Ok($type::try_from(byte).unwrap_or($type::Unknown))
-            }
-        }
-    };
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct Coordinates<T: Num + binread::BinRead<Args = ()>> {
-    pub x: T,
-    pub y: T,
-    pub z: T,
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct WheelValue<T: binread::BinRead<Args = ()>> {
-    pub rear_left: T,
-    pub rear_right: T,
-    pub front_left: T,
-    pub front_right: T,
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct FrontRearValue<T: Num + binread::BinRead<Args = ()>> {
-    pub front: T,
-    pub rear: T,
-}
-
-#[derive(Debug, Default, BinRead)]
-pub struct WingValue<T: binread::BinRead<Args = ()>> {
-    pub front_left: T,
-    pub front_right: T,
-    pub rear: T,
 }
 
 #[derive(Debug, BinRead)]
