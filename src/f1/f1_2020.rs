@@ -10,7 +10,6 @@ use crate::{
 };
 
 use binread::{BinRead, BinReaderExt};
-use enum_default::EnumDefault;
 use num_enum::TryFromPrimitive;
 
 /// F1_2020 implements the codemasters UDP telemetry protocol for "F1 2020"
@@ -112,7 +111,7 @@ impl Session {
     }
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Weather {
     Clear,
@@ -121,14 +120,16 @@ pub enum Weather {
     LightRain,
     HeavyRain,
     Storm,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(Weather, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(i8)]
 pub enum Track {
+    #[default]
     Unknown = -1,
     Melbourne,
     PaulRicard,
@@ -161,24 +162,26 @@ pub enum Track {
 
 binread_enum!(Track, i8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Formula {
     F1Modern,
     F1Classic,
     F2,
     F1Generic,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(Formula, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum SafetyCarStatus {
     NoSafetyCar,
     FullSafetyCar,
     VirtualSafetyCar,
+    #[default]
     Unknown = 255,
 }
 
@@ -190,9 +193,10 @@ pub struct MarshalZone {
     pub zone_flag: ZoneFlag,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(i8)]
 pub enum ZoneFlag {
+    #[default]
     Unknown = -1,
     None,
     Green,
@@ -212,9 +216,10 @@ pub struct WeatherForecastSample {
     pub air_temperature: i8,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum SessionType {
+    #[default]
     Unknown,
     Practice1,
     Practice2,
@@ -282,29 +287,31 @@ pub struct BestOverallSectorTime {
     pub lap_number: u8,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum PitStatus {
     None,
     Pitting,
     InPitArea,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(PitStatus, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Sector {
     Sector1,
     Sector2,
     Sector3,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(Sector, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum DriverStatus {
     InGarage,
@@ -312,12 +319,13 @@ pub enum DriverStatus {
     InLap,
     OutLap,
     InTrack,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(DriverStatus, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum ResultStatus {
     Invalid,
@@ -328,6 +336,7 @@ pub enum ResultStatus {
     NotClassified,
     Retired,
     MechanicalFailure,
+    #[default]
     Unknown = 255,
 }
 
@@ -423,7 +432,7 @@ pub struct PenaltyEventDetail {
     pub places_gained: u8,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum PenaltyType {
     DriveThrough,
@@ -444,12 +453,13 @@ pub enum PenaltyType {
     ThisAndPreviousLapInvalidatedWithNoReason,
     Retired,
     BlackFlagTimer,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(PenaltyType, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum InfringementType {
     BlockingBySlowDriving,
@@ -504,6 +514,7 @@ pub enum InfringementType {
     RetryPenalty,
     IllegalTimeGain,
     MandatoryPitstop,
+    #[default]
     Unknown = 255,
 }
 
@@ -548,7 +559,7 @@ fn participant_name_parser<R: binread::io::Read + binread::io::Seek>(
     Ok(String::from(driver_name))
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Driver {
     CarlosSainz,
@@ -631,12 +642,13 @@ pub enum Driver {
     GuilianoAlesi,
     RalphBoschung,
     MyDriver = 100,
+    #[default]
     Unknown = 255, // Used for time trial "ghost" drivers that appear randomly
 }
 
 binread_enum!(Driver, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Team {
     Mercedes,
@@ -698,15 +710,17 @@ pub enum Team {
     Ferrari1990 = 63,
     McLaren2010,
     Ferrari2010,
+    #[default]
     Unknown = 254,
     MyTeam = 255,
 }
 
 binread_enum!(Team, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Nationality {
+    #[default]
     Unknown,
     American,
     Argentinean,
@@ -878,7 +892,7 @@ fn surface_type_parser<R: binread::io::Read + binread::io::Seek>(
     })
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(i8)]
 pub enum Gear {
     Reverse = -1,
@@ -891,12 +905,13 @@ pub enum Gear {
     Sixth,
     Seventh,
     Eigth,
+    #[default]
     Unknown = 127,
 }
 
 binread_enum!(Gear, i8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum Surface {
     Tarmac,
@@ -911,12 +926,13 @@ pub enum Surface {
     Cobblestone,
     Metal,
     Ridged,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(Surface, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum MFDPanel {
     CarSetup,
@@ -924,6 +940,7 @@ pub enum MFDPanel {
     Damage,
     Engine,
     Temperatures,
+    #[default]
     Unknown,
     Closed = 255,
 }
@@ -971,36 +988,39 @@ pub struct CarStatusData {
     pub ers_data: ERS,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum FuelMix {
     Lean,
     Standard,
     Rich,
     Max,
+    #[default]
     Unknown,
 }
 
 binread_enum!(FuelMix, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum DRSAllowed {
     NotAllowed,
     Allowed,
+    #[default]
     Unknown,
 }
 
 binread_enum!(DRSAllowed, u8);
 
-#[derive(Debug, EnumDefault)]
+#[derive(Debug, Default)]
 #[repr(u16)]
 pub enum DRSActivationDistance {
+    #[default]
     NotAvailable,
     Distance(u16),
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum TyreCompound {
     Inter = 7,
@@ -1017,12 +1037,13 @@ pub enum TyreCompound {
     C3,
     C2,
     C1,
+    #[default]
     Unknown,
 }
 
 binread_enum!(TyreCompound, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum TyreVisual {
     Inter = 7,
@@ -1030,14 +1051,16 @@ pub enum TyreVisual {
     Soft = 16,
     Medium = 17,
     Hard = 18,
+    #[default]
     Unknown = 255,
 }
 
 binread_enum!(TyreVisual, u8);
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(i8)]
 pub enum FiaFlag {
+    #[default]
     Unknown = -1,
     None,
     Green,
@@ -1057,13 +1080,14 @@ pub struct ERS {
     pub deployed_this_lap: f32,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum ERSDeployMode {
     None,
     Medium,
     Overtake,
     Hotlap,
+    #[default]
     Unknown = 255,
 }
 
@@ -1133,12 +1157,13 @@ pub struct LobbyInfoData {
     pub status: LobbyStatus,
 }
 
-#[derive(Debug, TryFromPrimitive, EnumDefault)]
+#[derive(Debug, Default, TryFromPrimitive)]
 #[repr(u8)]
 pub enum LobbyStatus {
     NotReady,
     Ready,
     Spectating,
+    #[default]
     Unknown,
 }
 
