@@ -15,7 +15,7 @@ pub(crate) use player_data;
 
 /// binread_enum implements a default BinRead trait for enums
 /// arguments are the enum to implement and the size of it
-/// note: enum has to have an "Unknown" element and implement TryFromPrimitive trait
+/// note: enum has to implement "Default" and "TryFromPrimitive" traits.
 macro_rules! binread_enum {
     ($type:ident, $repr:ident) => {
         impl binread::BinRead for $type {
@@ -26,7 +26,7 @@ macro_rules! binread_enum {
                 args: Self::Args,
             ) -> binread::BinResult<Self> {
                 let byte = $repr::read_options(reader, options, args)?;
-                Ok($type::try_from(byte).unwrap_or($type::Unknown))
+                Ok($type::try_from(byte).unwrap_or($type::default()))
             }
         }
     };
