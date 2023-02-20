@@ -1,6 +1,6 @@
 [package]
 name = "cm-telemetry"
-version = "2.3.0"
+version = "2.3.1"
 authors = ["Oscar Moreno <oscarmg99@gmail.com>"]
 repository = "https://github.com/ozkar99/cm-telemetry"
 readme = "README.md"
@@ -11,7 +11,6 @@ edition = "2018"
 [dependencies]
 num = "0.4"
 num_enum = "0.5"
-enum_default = "0.2"
 binread = "2.2"
 byteorder = "1"
 bitflags = "1.3.2"
