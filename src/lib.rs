@@ -22,7 +22,7 @@ pub struct TelemetryServer<T: TelemetryEvent> {
 
 impl<T: TelemetryEvent> TelemetryServer<T> {
     /// new initializes a Server with the given address
-    pub fn new(address: &'static str) -> Result<TelemetryServer<T>, std::io::Error> {
+    pub fn new(address: &str) -> Result<TelemetryServer<T>, std::io::Error> {
         let srv = net::Server::new(address)?;
         Ok(TelemetryServer {
             srv,
