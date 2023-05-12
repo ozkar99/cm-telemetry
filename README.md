@@ -43,5 +43,6 @@ PR's welcome :)
 
 ### Furter Reading
 
-https://forums.codemasters.com/topic/50942-f1-2020-udp-specification/
-https://answers.ea.com/t5/General-Discussion/F1-22-UDP-Specification/td-p/11551274
+[F1 2020 UDP Specification](https://web.archive.org/web/20221127112921/https://forums.codemasters.com/topic/50942-f1-2020-udp-specification/)       (Webarchive because EA)
+
+[F1 2022 UDP Specification](https://answers.ea.com/t5/General-Discussion/F1-22-UDP-Specification/td-p/11551274)
