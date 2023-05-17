@@ -172,7 +172,7 @@ pub enum SessionType {
     ShortQualifier,
     OSQ,
     Race,
-    Formula2Race,
+    R2,
     R3,
     TimeTrial,
 }
