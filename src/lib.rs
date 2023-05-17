@@ -22,7 +22,7 @@ pub struct TelemetryServer<T: TelemetryEvent> {
 
 impl<T: TelemetryEvent> TelemetryServer<T> {
     /// new initializes a Server with the given address
-    pub fn new(address: &'static str) -> Result<TelemetryServer<T>, std::io::Error> {
+    pub fn new(address: &str) -> Result<TelemetryServer<T>, std::io::Error> {
         let srv = net::Server::new(address)?;
         Ok(TelemetryServer {
             srv,
@@ -34,6 +34,33 @@ impl<T: TelemetryEvent> TelemetryServer<T> {
     /// and will call from_packet from the given T
     pub fn next(&self) -> Result<T, Box<dyn std::error::Error>> {
         let packet = self.srv.recv()?;
+        T::from_packet(&packet)
+    }
+}
+
+/// AsyncTelemetryServer implements a generic async server that can bind and recv packets
+/// exposes the next_event method that returns an unpacked "TelemetryEvent"
+#[cfg(feature = "async")]
+pub struct AsyncTelemetryServer<T: TelemetryEvent> {
+    srv: net::AsyncServer,
+    phantom: std::marker::PhantomData<T>, // needed to avoid "type unused" compile error
+}
+
+#[cfg(feature = "async")]
+impl<T: TelemetryEvent> AsyncTelemetryServer<T> {
+    /// new initializes a Server with the given address
+    pub async fn new(address: &str) -> Result<AsyncTelemetryServer<T>, std::io::Error> {
+        let srv = net::AsyncServer::new(address).await?;
+        Ok(AsyncTelemetryServer {
+            srv,
+            phantom: std::marker::PhantomData,
+        })
+    }
+
+    /// next will call recv on the inner UDP async server
+    /// and will call from_packet from the given T
+    pub async fn next(&self) -> Result<T, Box<dyn std::error::Error>> {
+        let packet = self.srv.recv().await?;
         T::from_packet(&packet)
     }
 }
